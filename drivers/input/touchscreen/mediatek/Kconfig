@@ -208,4 +208,45 @@ config TOUCHSCREEN_LGE_FT8707
 	  connected to your system.
 	  To compile this dirver as a module, choose M here: the
 	  module will be called.
+	  
+#ranyanhao@wind-mobi.com 20160215 begin
+config TOUCHSCREEN_HIMAX_HX852xES
+	bool "Himax touchpanel HX852xES series"
+	depends on I2C
+	help
+	  Say Y here if you have a Himax HX852xES touchscreen.
+	  HX852xES controllers are multi touch controllers which can
+	  report 10 touches at a time.
+
+          If unsure, say N.
+
+source "drivers/input/touchscreen/mediatek/hx852xes/Kconfig"	             	  
+#ranyanhao@wind-mobi.com 20160215 end
+
+#hebiao@wind-mobi.com 2016826 begin
+config TOUCHSCREEN_SYNAPTICSS2716
+	bool "Synaptics touchpanel S2716 series"
+	depends on I2C
+	help
+	  Say Y here if you have a Synaptics S2716 touchscreen.
+	  S2716 controllers are multi touch controllers which can
+	  report 10 touches at a time.
+
+          If unsure, say N.
+
+source "drivers/input/touchscreen/mediatek/synapticss2716/Kconfig"	             	  
+#hebiao@wind-mobi.com 20160826 end
+#zhangkaiyuan@wind-mobi.com 20161109 begin
+config TOUCHSCREEN_FT8608
+	bool "focaltech touchpanel ft8608 series"
+	depends on I2C
+	help
+	  Say Y here if you have a Synaptics S2716 touchscreen.
+	  S2716 controllers are multi touch controllers which can
+	  report 10 touches at a time.
+
+          If unsure, say N.
+
+source "drivers/input/touchscreen/mediatek/ft8608/Kconfig"	             	  
+#zhangkaiyuan@wind-mobi.com 20161109 end
 endif

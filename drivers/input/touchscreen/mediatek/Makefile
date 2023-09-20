@@ -24,3 +24,16 @@ obj-$(CONFIG_TOUCHSCREEN_MTK_FT5X0X)	+=  ft5x0x/
 obj-$(CONFIG_TOUCHSCREEN_MTK_SYNAPTICS_3320_50) +=  synaptics_3320_50/
 obj-$(CONFIG_TOUCHSCREEN_MTK_GT9271TB_HOTKNOT) +=  GT9271TB_hotknot/
 obj-$(CONFIG_TOUCHSCREEN_UNIFIED_DRIVER_4)	+=  unified_driver_4/
+#hebiao@wind-mobi.com 20160827 begin
+obj-$(CONFIG_TOUCHSCREEN_SYNAPTICSS2716)	+=  synapticss2716/
+#hebiao@wind-mobi.com 20160827 end
+#ranyanhao@wind-mobi.com 20160215 begin
+ifeq ($(CONFIG_TOUCHSCREEN_HIMAX_HX852xES),y)
+obj-y	+=  hx852xes/
+endif
+#ranyanhao@wind-mobi.com 20160215 end
+#zhangkaiyuan@wind-mobi.com 20161109 begin
+ifeq ($(CONFIG_TOUCHSCREEN_FT8608),y)
+obj-y	+=  ft8608/
+endif
+#zhangkaiyuan@wind-mobi.com 20161109 end

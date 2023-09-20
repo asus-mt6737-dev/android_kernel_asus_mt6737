@@ -530,6 +530,14 @@ static int tpd_probe(struct platform_device *pdev)
 
 	/* save dev for regulator_get() before tpd_local_init() */
 	tpd->tpd_dev = &pdev->dev;
+//dingyisheng@wind-mobi.com 20170317 begin
+	for (i = 0; i < TP_DRV_MAX_COUNT; i++) {
+		if (tpd_driver_list[i].tpd_device_name) {
+			printk("%s probing device[%d] %s\n",
+				__func__, i, tpd_driver_list[i].tpd_device_name);
+		}
+	}
+//dingyisheng@wind-mobi.com 20170317 end
 	for (i = 1; i < TP_DRV_MAX_COUNT; i++) {
 		/* add tpd driver into list */
 		if (tpd_driver_list[i].tpd_device_name != NULL) {
