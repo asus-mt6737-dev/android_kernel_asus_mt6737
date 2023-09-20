@@ -1188,8 +1188,8 @@ static u32 msdc_ldo_power(u32 on, unsigned int powerId, int voltage_uv,
 			msdc_hwPowerOn(powerId, voltage_uv, "msdc");
 			*status = voltage_uv;
 		} else if (*status == voltage_uv) {
-			/*pr_err("msdc LDO<%d><%d> power on again!\n",
-				powerId, voltage_uv);*/
+			pr_err("msdc LDO<%d><%d> power on again!\n",
+				powerId, voltage_uv);
 		} else {	/* for sd3.0 later */
 			pr_warn("msdc LDO<%d> change<%d> to <%d>\n",
 				powerId, *status, voltage_uv);
@@ -1216,7 +1216,7 @@ static u32 msdc_ldo_power(u32 on, MT65XX_POWER powerId, int voltage_uv,
 			hwPowerOn(powerId, voltage_uv, "msdc");
 			*status = voltage_uv;
 		} else if (*status == voltage_uv) {
-			/*pr_err("msdc LDO<%d><%d> power on again!\n", powerId, voltage_uv);*/
+			pr_err("msdc LDO<%d><%d> power on again!\n", powerId, voltage_uv);
 		} else { /* for sd3.0 later */
 			pr_warn("msdc LDO<%d> change<%d> to <%d>\n",
 				powerId, *status, voltage_uv);
@@ -4305,16 +4305,16 @@ static void msdc_dma_start(struct msdc_host *host)
 	sdr_set_bits(MSDC_INTEN, wints);
 
 	N_MSG(DMA, "DMA start");
-
+//dingyisheng@wind-mobi.com 20161115 begin
 	if (host->data && host->data->flags & MMC_DATA_WRITE) {
-		host->write_timeout_ms = 10000;
+		host->write_timeout_ms = 100000;
 		schedule_delayed_work(&host->write_timeout,
 			msecs_to_jiffies(host->write_timeout_ms));
 		N_MSG(DMA, "DMA Data Busy Timeout:%u ms, schedule_delayed_work",
 			host->write_timeout_ms);
 	}
 }
-
+//dingyisheng@wind-mobi.com 20161115 end
 static void msdc_dma_stop(struct msdc_host *host)
 {
 	void __iomem *base = host->base;

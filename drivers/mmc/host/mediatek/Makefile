@@ -33,6 +33,11 @@ ccflags-y += -I$(srctree)/drivers/mmc/host/mediatek/rpmb/drrpmb_gp/public
 ccflags-y += -I$(srctree)/drivers/mmc/host/mediatek/rpmb/tlrpmb/public
 endif
 
+# dingyisheng@wind-mobi.com 20161115 begin
+ifeq ($(CONFIG_TRUSTKERNEL_TEE_SUPPORT),y)
+ccflags-y += -I$(srctree)/drivers/misc/mediatek/tkcore/include/linux
+endif
+# dingyisheng@wind-mobi.com 20161115 end
 ccflags-y += -I$(srctree)
 ccflags-y += -I$(srctree)/drivers/mmc/host/mediatek/$(MTK_PLATFORM)
 obj-$(CONFIG_MMC_MTK) += emmc_rpmb.o

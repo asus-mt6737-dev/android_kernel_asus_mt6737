@@ -45,7 +45,14 @@
 
 #include "emmc_rpmb.h"
 #include "mt_sd.h"
-
+//dingyisheng@wind-mobi.com 20161115 begin
+#ifdef CONFIG_TRUSTKERNEL_TEE_SUPPORT
+#include "tee_rpmb.h"
+//dingyisheng@wind-mobi.com 20170222 begin
+#include "kernel/power/power.h"
+//dingyisheng@wind-mobi.com 20170222 end
+#endif
+//dingyisheng@wind-mobi.com 20161115 end
 /* TEE usage */
 #ifdef CONFIG_TRUSTONIC_TEE_SUPPORT
 #include "mobicore_driver_api.h"
@@ -89,7 +96,8 @@ do {\
 } while (0)
 
 #if (defined(CONFIG_MICROTRUST_TEE_SUPPORT))
-#define RPMB_DATA_BUFF_SIZE (1024 * 33)
+#define RPMB_DATA_BUFF_SIZE (1024 * 24)
+#define RPMB_ONE_FRAME_SIZE (512)
 static unsigned char *rpmb_buffer;
 #endif
 
@@ -225,9 +233,11 @@ int emmc_rpmb_switch(struct mmc_card *card, struct emmc_rpmb_blk_data *md)
 		part_config &= ~EXT_CSD_PART_CONFIG_ACC_MASK;
 		part_config |= md->part_type;
 
+//dingyisheng@wind-mobi.com 20161115 begin
 		ret = mmc_switch(card, EXT_CSD_CMD_SET_NORMAL,
 				 EXT_CSD_PART_CONFIG, part_config,
-				 card->ext_csd.part_time);
+				 0);
+//dingyisheng@wind-mobi.com 20161115 end
 		if (ret)
 			return ret;
 
@@ -1456,6 +1466,122 @@ static int emmc_rpmb_thread(void *context)
 }
 #endif
 
+//dingyisheng@wind-mobi.com 20161115 begin
+
+#if defined(CONFIG_TRUSTKERNEL_TEE_SUPPORT)
+
+//dingyisheng@wind-mobi.com 20170222 begin
+#include <linux/ktime.h>
+
+static void acquire_pm_autosleep_lock(void)
+{
+	uint64_t t_begin = ktime_to_us(ktime_get()), t_last;
+	t_last = t_begin;
+	while (pm_autosleep_lock()) {
+		uint64_t t_cur = ktime_to_us(ktime_get());
+		if (t_cur - t_last >= 1000000) {
+			pr_warn("%s wait over %llu us\n", __func__, t_cur - t_begin);
+			t_last = t_cur;
+//dingyisheng@wind-mobi.com 20170314 begin
+			freezable_schedule();
+//dingyisheng@wind-mobi.com 20170314 end
+		}    
+	}    
+}
+//dingyisheng@wind-mobi.com 20170222 end
+int tkcore_emmc_rpmb_execute(struct tkcore_rpmb_request *req)
+{
+    int ret;
+
+    struct mmc_card *card = mtk_msdc_host[0]->mmc->card;//emmc_rpmb_host->card;
+    struct emmc_rpmb_req rpmb_req;
+
+    memset(&rpmb_req, 0, sizeof(struct emmc_rpmb_req));
+
+    switch (req->type) {
+
+        case TEE_RPMB_GET_DEV_INFO:
+            {
+                struct tee_rpmb_dev_info *dev_info = (struct tee_rpmb_dev_info *) req->data_frame;
+                memcpy(dev_info->cid, card->raw_cid, TEE_RPMB_EMMC_CID_SIZE);
+                dev_info->rpmb_size_mult = card->ext_csd.raw_rpmb_size_mult;
+                dev_info->rel_wr_sec_c = card->ext_csd.rel_sectors;
+                ret = 0;
+            }
+            break;
+
+        case TEE_RPMB_READ_DATA:
+            MSG(INFO, "%s: TEE_RPMB_READ_DATA.\n", __func__);
+
+            rpmb_req.type       = RPMB_READ_DATA;
+            rpmb_req.blk_cnt    = req->blk_cnt;
+            rpmb_req.addr       = req->addr;
+            rpmb_req.data_frame = req->data_frame;
+			//dingyisheng@wind-mobi.com 20170222 begin
+            acquire_pm_autosleep_lock();
+			//dingyisheng@wind-mobi.com 20170222 end
+            ret = emmc_rpmb_req_handle(card, &rpmb_req);
+			//dingyisheng@wind-mobi.com 20170222 begin
+            pm_autosleep_unlock();
+			//dingyisheng@wind-mobi.com 20170222 end
+			
+            if (ret)
+                MSG(ERR, "%s cmd 0x%x failed!!(0x%x)\n", __func__, req->type, ret);
+
+            break;
+
+        case TEE_RPMB_GET_WRITE_COUNTER:
+            MSG(INFO, "%s: TEE_RPMB_GET_WRITE_COUNTER.\n", __func__);
+
+            rpmb_req.type       = RPMB_GET_WRITE_COUNTER;
+            rpmb_req.blk_cnt    = req->blk_cnt;
+            rpmb_req.addr       = req->addr;
+            rpmb_req.data_frame = req->data_frame;
+			//dingyisheng@wind-mobi.com 20170222 begin
+            acquire_pm_autosleep_lock();
+			//dingyisheng@wind-mobi.com 20170222 end
+            ret = emmc_rpmb_req_handle(card, &rpmb_req);
+			//dingyisheng@wind-mobi.com 20170222 begin
+            pm_autosleep_unlock();
+			//dingyisheng@wind-mobi.com 20170222 end
+            if (ret)
+                MSG(ERR, "%s cmd 0x%x failed!!(0x%x)\n", __func__, req->type, ret);
+
+            break;
+
+        case TEE_RPMB_WRITE_DATA:
+            MSG(INFO, "%s: TEE_RPMB_CMD_WRITE_DATA.\n", __func__);
+
+            rpmb_req.type       = RPMB_WRITE_DATA;
+            rpmb_req.blk_cnt    = req->blk_cnt;
+            rpmb_req.addr       = req->addr;
+            rpmb_req.data_frame = req->data_frame;
+			//dingyisheng@wind-mobi.com 20170222 begin
+            acquire_pm_autosleep_lock();
+			//dingyisheng@wind-mobi.com 20170222 end
+            ret = emmc_rpmb_req_handle(card, &rpmb_req);
+			//dingyisheng@wind-mobi.com 20170222 begin
+            pm_autosleep_unlock();
+		    //dingyisheng@wind-mobi.com 20170222 end
+
+            if (ret)
+                MSG(ERR, "%s cmd 0x%x failed!!(0x%x)\n", __func__, req->type, ret);
+
+            break;
+
+        default:
+            MSG(ERR, "%s receive an unknown command id(0x%x).\n", __func__, req->type);
+            break;
+
+    }
+
+    return 0;
+}
+
+EXPORT_SYMBOL_GPL(tkcore_emmc_rpmb_execute);
+
+#endif
+//dingyisheng@wind-mobi.com 20161115 end
 static int emmc_rpmb_open(struct inode *inode, struct file *file)
 {
 	MSG(INFO, "%s, !!!!!!!!!!!!\n", __func__);
@@ -1476,6 +1602,7 @@ static long emmc_rpmb_ioctl(struct file *file, unsigned int cmd, unsigned long a
 	struct rpmb_ioc_param param;
 	int ret = 0;
 #if (defined(CONFIG_MICROTRUST_TEE_SUPPORT))
+	u32 rpmb_size = 0;
 	struct rpmb_infor rpmbinfor;
 
 	memset(&rpmbinfor, 0, sizeof(struct rpmb_infor));
@@ -1495,20 +1622,27 @@ static long emmc_rpmb_ioctl(struct file *file, unsigned int cmd, unsigned long a
 			MSG(ERR, "%s, rpmb_buffer is NULL!\n", __func__);
 			return -1;
 		}
-		err = copy_from_user(rpmb_buffer, (void *)arg, 4);
+		err = copy_from_user(&rpmb_size, (void *)arg, 4);
 		if (err < 0) {
 			MSG(ERR, "%s, err=%x\n", __func__, err);
 			return -1;
 		}
-		rpmbinfor.size =  *(unsigned char *)rpmb_buffer | (*((unsigned char *)rpmb_buffer + 1) << 8);
-		rpmbinfor.size |= (*((unsigned char *)rpmb_buffer+2) << 16) | (*((unsigned char *)rpmb_buffer+3) << 24);
-		MSG(INFO, "%s, rpmbinfor.size is %d!\n", __func__, rpmbinfor.size);
-		err = copy_from_user(rpmb_buffer, (void *)arg, 4 + rpmbinfor.size);
-		if (err < 0) {
-			MSG(ERR, "%s, err=%x\n", __func__, err);
-			return -1;
+		rpmbinfor.size =  *(unsigned char *)&rpmb_size | (*((unsigned char *)&rpmb_size + 1) << 8);
+		rpmbinfor.size |= (*((unsigned char *)&rpmb_size+2) << 16) | (*((unsigned char *)&rpmb_size+3) << 24);
+		if (rpmbinfor.size <= (RPMB_DATA_BUFF_SIZE-4)) {
+			MSG(INFO, "%s, rpmbinfor.size is %d!\n", __func__, rpmbinfor.size);
+			err = copy_from_user(rpmb_buffer, (void *)arg, 4 + rpmbinfor.size);
+			if (err < 0) {
+				MSG(ERR, "%s, err=%x\n", __func__, err);
+				return -1;
+			}
+			rpmbinfor.data_frame = (rpmb_buffer + 4);
+		} else {
+			MSG(ERR, "%s, rpmbinfor.size(%d+4) is overflow (%d)!\n",
+					__func__, rpmbinfor.size, RPMB_DATA_BUFF_SIZE);
+			ret = -1;
+			goto end;
 		}
-		rpmbinfor.data_frame = (rpmb_buffer + 4);
 	}
 #endif
 
@@ -1547,7 +1681,9 @@ static long emmc_rpmb_ioctl(struct file *file, unsigned int cmd, unsigned long a
 #if (defined(CONFIG_MICROTRUST_TEE_SUPPORT))
 	case RPMB_IOCTL_SOTER_WRITE_DATA:
 
-		ret = ut_rpmb_req_write_data(card, (struct s_rpmb *)(rpmbinfor.data_frame), rpmbinfor.size/1024);
+			ret = ut_rpmb_req_write_data(card,
+					(struct s_rpmb *)(rpmbinfor.data_frame),
+					rpmbinfor.size / RPMB_ONE_FRAME_SIZE);
 
 		if (ret) {
 			MSG(ERR, "%s, emmc_rpmb_req_handle IO error!!!(%x)\n", __func__, ret);
@@ -1560,7 +1696,9 @@ static long emmc_rpmb_ioctl(struct file *file, unsigned int cmd, unsigned long a
 
 	case RPMB_IOCTL_SOTER_READ_DATA:
 
-		ret = ut_rpmb_req_read_data(card, (struct s_rpmb *)(rpmbinfor.data_frame), rpmbinfor.size/1024);
+			ret = ut_rpmb_req_read_data(card,
+					(struct s_rpmb *)(rpmbinfor.data_frame),
+					rpmbinfor.size / RPMB_ONE_FRAME_SIZE);
 
 		if (ret) {
 			MSG(ERR, "%s, emmc_rpmb_req_handle IO error!!!(%x)\n", __func__, ret);
