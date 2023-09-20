@@ -50,6 +50,12 @@
 #define AFDRV_OV8825AF "OV8825AF"
 #define AFDRV_WV511AAF "WV511AAF"
 
+// zhaozhensen@wind-mobi.com 20160729 begin 
+#define AFDRV_GT9762AF "GT9762AF"
+#define AFDRV_GT9762AF_NEW "GT9762AF_NEW"
+#define AFDRV_GT9762AF_OV "GT9762AF_OV"
+#define AFDRV_GT9762AF_S5K3M2 "GT9762AF_S5K3M2"
+// zhaozhensen@wind-mobi.com 20160729 end 
 /* Structures */
 typedef struct {
 /* current position */

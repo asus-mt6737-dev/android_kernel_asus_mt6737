@@ -49,4 +49,10 @@ obj-$(CONFIG_MTK_YAS532)   +=  yamaha532/
 obj-$(CONFIG_MTK_YAS532_NEW)   +=  yamaha532-new/
 obj-$(CONFIG_MTK_YAS537)	+=  yamaha537/
 obj-$(CONFIG_MTK_BMC156_MAG)	+=  bmc156_mag/
+#hebiao@wind-mobi.com 20160324 add begin
+obj-$(CONFIG_MTK_QMCX983)	+=  qmcX983/
+#hebiao@wind-mobi.com 20160324 add end
+#ranyanhao@wind-mobi.com 20160118 begin
+obj-$(CONFIG_MTK_MMC3524X) += mmc3524x/
+#ranyanhao@wind-mobi.com 20160118 end
 endif

@@ -15,6 +15,32 @@
 
 #define _LENS_LIST_H
 
+// zhaozhensen@wind-mobi.com 20160729 begin 
+#ifdef CONFIG_MTK_LENS_GT9762AF_SUPPORT
+extern void GT9762AF_SetI2Cclient(struct i2c_client *pstAF_I2Cclient, spinlock_t *pAF_SpinLock, int *pAF_Opened);
+extern long GT9762AF_Ioctl(struct file *a_pstFile, unsigned int a_u4Command, unsigned long a_u4Param);
+extern int GT9762AF_Release(struct inode *a_pstInode, struct file *a_pstFile);
+#endif
+
+#ifdef CONFIG_MTK_LENS_GT9762AF_NEW_SUPPORT
+extern void GT9762AF_NEW_SetI2Cclient(struct i2c_client *pstAF_I2Cclient, spinlock_t *pAF_SpinLock, int *pAF_Opened);
+extern long GT9762AF_NEW_Ioctl(struct file *a_pstFile, unsigned int a_u4Command, unsigned long a_u4Param);
+extern int GT9762AF_NEW_Release(struct inode *a_pstInode, struct file *a_pstFile);
+#endif
+
+#ifdef CONFIG_MTK_LENS_GT9762AF_OV_SUPPORT
+extern void GT9762AF_OV_SetI2Cclient(struct i2c_client *pstAF_I2Cclient, spinlock_t *pAF_SpinLock, int *pAF_Opened);
+extern long GT9762AF_OV_Ioctl(struct file *a_pstFile, unsigned int a_u4Command, unsigned long a_u4Param);
+extern int GT9762AF_OV_Release(struct inode *a_pstInode, struct file *a_pstFile);
+#endif
+
+#ifdef CONFIG_MTK_LENS_GT9762AF_S5K3M2_SUPPORT
+extern void GT9762AF_S5K3M2_SetI2Cclient(struct i2c_client *pstAF_I2Cclient, spinlock_t *pAF_SpinLock, int *pAF_Opened);
+extern long GT9762AF_S5K3M2_Ioctl(struct file *a_pstFile, unsigned int a_u4Command, unsigned long a_u4Param);
+extern int GT9762AF_S5K3M2_Release(struct inode *a_pstInode, struct file *a_pstFile);
+#endif
+// zhaozhensen@wind-mobi.com 20160729 end 
+
 #ifdef CONFIG_MTK_LENS_AK7371AF_SUPPORT
 #define AK7371AF_SetI2Cclient AK7371AF_SetI2Cclient_Main
 #define AK7371AF_Ioctl AK7371AF_Ioctl_Main

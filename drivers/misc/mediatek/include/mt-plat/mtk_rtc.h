@@ -1,16 +1,3 @@
-/*
- * Copyright (C) 2015 MediaTek Inc.
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- */
-
 #ifndef MTK_RTC_H
 #define MTK_RTC_H
 
@@ -55,6 +42,17 @@ extern u16 rtc_rdwr_uart_bits(u16 *val);
 extern void rtc_bbpu_power_down(void);
 extern void rtc_read_pwron_alarm(struct rtc_wkalrm *alm);
 extern int get_rtc_spare_fg_value(void);
+
+//liqiang@wind-mobi.com 20170309 begin 
+#ifdef CONFIG_WIND_ASUS_BATTERY_LIFE_SUPPORT
+#include <mt-plat/battery_common.h>
+
+extern int get_rtc_spare_batlife_value(BAT_LIFE_Struct *batlife_status);
+extern int set_rtc_spare_batlife_value(BAT_LIFE_Struct *batlife_status);
+#endif
+//liqiang@wind-mobi.com 20170309 end 
+
+
 extern int set_rtc_spare_fg_value(int val);
 extern void rtc_irq_handler(void);
 extern bool crystal_exist_status(void);

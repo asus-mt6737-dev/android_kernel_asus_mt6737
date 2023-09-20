@@ -62,6 +62,11 @@
 #define BATTERY_UNDER_VOL		(2)
 #define BATTERY_OVER_TEMP		(3)
 #define ADC_SAMPLE_TIMES        (5)
+//qiangang@wind-mobi.com 20170104 begin			
+#ifdef CONFIG_WIND_BATTERY_MODIFY
+#define charger_UNDER_VOL       (6)			
+#endif			
+//qiangang@wind-mobi.com 20170104 end
 
 /*****************************************************************************
  *  Pulse Charging State
@@ -161,11 +166,22 @@ typedef enum {
 /*****************************************************************************
  *  Normal battery temperature state
  ****************************************************************************/
+//qiangang@wind-mobi.com 20161019 begin
+#ifdef CONFIG_WIND_ASUS_DEMAND_SUPPORT
+typedef enum {
+	TEMP_POS_LOW = 0,
+	TEMP_POS_NORMAL,
+	TEMP_POS_HIGH,
+	TEMP_POS_HIGH_VOL
+} batt_temp_state_enum;
+#else
 typedef enum {
 	TEMP_POS_LOW = 0,
 	TEMP_POS_NORMAL,
 	TEMP_POS_HIGH
 } batt_temp_state_enum;
+#endif
+//qiangang@wind-mobi.com 20161019 end
 
 #ifndef BATTERY_BOOL
 #define BATTERY_BOOL
@@ -187,6 +203,20 @@ typedef unsigned char  BOOL;
   #define TRUE  (1)
 #endif
 
+//liqiang@wind-mobi.com begin 
+
+#ifdef CONFIG_WIND_ASUS_BATTERY_LIFE_SUPPORT
+typedef struct {
+   unsigned char Batlife_mode;
+   unsigned char Batlife2Normal;
+   unsigned char Normal2Batlife;
+} BAT_LIFE_Struct;
+
+#define BATTERY_INIT_MODE   0
+#define BATTERY_NORMAL_MODE 1
+#define BATTERY_LIFE_MODE 2
+#endif
+//liqiang@wind-mobi.com end
 
 
 /*****************************************************************************
@@ -216,6 +246,13 @@ typedef struct {
 	signed int SOC;
 	signed int UI_SOC;
 	signed int UI_SOC2;
+
+//liqiang@wind-mobi.com 20170310 begin
+#ifdef CONFIG_WIND_ASUS_BATTERY_LIFE_SUPPORT
+	signed int UI_SOC_BATLIFE;
+	kal_bool bat_full_batlife;
+#endif
+//liqiang@wind-mobi.com 20170310 end
 	unsigned int nPercent_ZCV;
 	unsigned int nPrecent_UI_SOC_check_point;
 	unsigned int ZCV;
@@ -248,9 +285,11 @@ struct battery_custom_data {
 	int usb_charger_current_unconfigured;
 	int usb_charger_current_configured;
 	int usb_charger_current;
+	int usb_charger_input_current;  //add by qiangang 20170504
 	int ac_charger_input_current;
 	int ac_charger_current;
 	int non_std_ac_charger_current;
+	int non_std_ac_charger_input_current; //add by qiangang 20170504
 	int charging_host_charger_current;
 	int apple_0_5a_charger_current;
 	int apple_1_0a_charger_current;
@@ -283,6 +322,7 @@ struct battery_custom_data {
 
 	/* High battery support */
 	int high_battery_voltage_support;
+	int ASUS_4_4V_battery_voltage_support; /*qiangang@wind-mobi.com 20170424 define */
 
 	/* JEITA parameter */
 	int mtk_jeita_standard_support;

@@ -4,6 +4,15 @@ config MTK_FLASHLIGHT
   help
     CONFIG_MTK_FLASHLIGHT
 
+## zhaozhensen@wind-mobi.com 20160712 begin
+config WIND_ASUS_FLASHLIGHT_LOW_BAT_ON
+	bool "WIND_ASUS_FLASHLIGHT_LOW_BAT_ON"
+	default n
+	help
+		This is an option for ASUS to control flashlight ON or OFF in low power
+## zhaozhensen@wind-mobi.com 20160712 end
+
+
 config CUSTOM_KERNEL_FLASHLIGHT
         string "CUSTOM_KERNEL_FLASHLIGHT"
         help

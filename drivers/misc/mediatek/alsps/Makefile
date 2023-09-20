@@ -29,4 +29,7 @@ obj-$(CONFIG_MTK_RPR410)	+=  rpr410/
 obj-$(CONFIG_MTK_TMD2771)	+=  tmd2771/
 obj-$(CONFIG_MTK_TMD2771_AUTO)	+=  tmd2771_auto/
 obj-$(CONFIG_MTK_STK3X1X_NEW)	+=  stk3x1x-new/
+#ranyanhao@wind-mobi.com 20151230 begin
+obj-$(CONFIG_MTK_EPL259X)  += epl259x/
+#ranyanhao@wind-mobi.com 20151230 end
 endif

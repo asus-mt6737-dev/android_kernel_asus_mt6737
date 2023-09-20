@@ -1,16 +1,3 @@
-/*
- * Copyright (C) 2015 MediaTek Inc.
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- */
-
 #ifndef MTK_RTC_HAL_COMMON_H
 #define MTK_RTC_HAL_COMMON_H
 
@@ -33,6 +20,11 @@ typedef enum {
 	RTC_PWRON_LOGO,
 	RTC_32K_LESS,
 	RTC_LP_DET,
+	//liqiang@wind-mobi.com begin
+#ifdef CONFIG_WIND_ASUS_BATTERY_LIFE_SUPPORT
+	RTC_BATLIFE,
+#endif
+	//liqiang@wind-mobi.com end
 	RTC_SPAR_NUM
 } rtc_spare_enum;
 

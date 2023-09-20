@@ -471,7 +471,7 @@ typedef struct {
 typedef struct {
 	unsigned char cmd;
 	unsigned char count;
-	unsigned char para_list[RT_MAX_NUM];
+	unsigned char para_list[10]; // modified by hebiao 20160824
 } LCM_esd_check_item;
 typedef enum {
 	DUAL_DSI_NONE = 0x0,
@@ -594,7 +594,7 @@ typedef struct {
 	unsigned int noncont_clock;
 	unsigned int noncont_clock_period;
 	unsigned int clk_lp_per_line_enable;
-	LCM_esd_check_item lcm_esd_check_table[ESD_CHECK_NUM];
+	LCM_esd_check_item lcm_esd_check_table[5]; //modified by hebiao at 2016824 zhangkaiyuan
 	unsigned int switch_mode_enable;
 	DUAL_DSI_TYPE dual_dsi_type;
 	unsigned int lane_swap_en;

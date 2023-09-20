@@ -37,3 +37,6 @@ source "drivers/misc/mediatek/accelerometer/bmc156_acc/Kconfig"
 source "drivers/misc/mediatek/accelerometer/mma8653/Kconfig"
 source "drivers/misc/mediatek/accelerometer/KXTJ2_1009-new/Kconfig"
 source "drivers/misc/mediatek/accelerometer/rt3000/Kconfig"
+# hebiao@wind-mobi.com 2016323 begin 
+source "drivers/misc/mediatek/accelerometer/n2dm/Kconfig"
+# hebiao@wind-mobi.com 2016323 end

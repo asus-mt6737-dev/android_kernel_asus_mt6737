@@ -138,6 +138,9 @@ NSFeature :  : RAWSensorInfo < _id >  :  : getFlickerPara \
 #define OV23850_SENSOR_ID                       0x023850
 #define OV16880_SENSOR_ID                       0x016880
 #define OV16825MIPI_SENSOR_ID                   0x016820
+//liulinsheng@wind-mobi.com 20160307 begin
+#define OV13853_SENSOR_ID                       0xD853
+//liulinsheng@wind-mobi.com 20160307 end
 #define OV13850_SENSOR_ID                       0xD850
 #define OV12830_SENSOR_ID                       0xC830
 #define OV9760MIPI_SENSOR_ID                    0x9760
@@ -176,6 +179,9 @@ NSFeature :  : RAWSensorInfo < _id >  :  : getFlickerPara \
 /*S5K*/
 #define S5K2L7_SENSOR_ID                        0x20C7
 #define S5K3L8_SENSOR_ID                        0x30C8
+// zhaozhensen@wind-mobi.com 20160126 begin
+#define S5K3L8_SENSOR_ID_NEW                    0x30C9
+// zhaozhensen@wind-mobi.com 20160126 end
 #define S5K2X8_SENSOR_ID                        0x2188
 #define S5K2P8_SENSOR_ID                        0x2108
 #define S5K3P3SX_SENSOR_ID                      0x3103
@@ -312,6 +318,9 @@ NSFeature :  : RAWSensorInfo < _id >  :  : getFlickerPara \
 #define SENSOR_DRVNAME_OV23850_MIPI_RAW         "ov23850mipiraw"
 #define SENSOR_DRVNAME_OV16880_MIPI_RAW         "ov16880mipiraw"
 #define SENSOR_DRVNAME_OV16825_MIPI_RAW         "ov16825mipiraw"
+//liulinsheng@wind-mobi.com 20160307 begin
+#define SENSOR_DRVNAME_OV13853_MIPI_RAW         "ov13853mipiraw"
+//liulinsheng@wind-mobi.com 20160307 end
 #define SENSOR_DRVNAME_OV13850_MIPI_RAW         "ov13850mipiraw"
 #define SENSOR_DRVNAME_OV12830_MIPI_RAW         "ov12830mipiraw"
 #define SENSOR_DRVNAME_OV9760_MIPI_RAW          "ov9760mipiraw"
@@ -352,6 +361,9 @@ NSFeature :  : RAWSensorInfo < _id >  :  : getFlickerPara \
 /*S5K*/
 #define SENSOR_DRVNAME_S5K2L7_MIPI_RAW          "s5k2l7mipiraw"
 #define SENSOR_DRVNAME_S5K3L8_MIPI_RAW          "s5k3l8mipiraw"
+// zhaozhensen@wind-mobi.com 20160126 begin
+#define SENSOR_DRVNAME_S5K3L8_MIPI_RAW_NEW      "s5k3l8mipirawnew"
+// zhaozhensen@wind-mobi.com 20160126 end
 #define SENSOR_DRVNAME_S5K2X8_MIPI_RAW          "s5k2x8mipiraw"
 #define SENSOR_DRVNAME_S5K2P8_MIPI_RAW          "s5k2p8mipiraw"
 #define SENSOR_DRVNAME_S5K3P3SX_MIPI_RAW      "s5k3p3sxmipiraw"

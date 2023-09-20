@@ -334,11 +334,13 @@ enum {
 #if defined(CONFIG_ARCH_MT6735)
 /* Idle handler on/off */
 static int idle_switch[NR_TYPES] = {
-	1,  /* dpidle switch */
+//dingyisheng@wind.mobi.com 20170227 begin
+	0,  /* dpidle switch */
+//dingyisheng@wind.mobi.com 20170227 end
 #if defined(CONFIG_MTK_DISABLE_SODI)
 	0,  /* soidle switch */
 #else
-	1,  /* soidle switch */
+	0,  /* soidle switch */ //modified by hebiao 728 for solving the questions of resting
 #endif
 	1,  /* slidle switch */
 	1,  /* rgidle switch */
@@ -385,11 +387,15 @@ static unsigned int slidle_condition_mask[NR_GRPS] = {
 #elif defined(CONFIG_ARCH_MT6735M)
 /* Idle handler on/off */
 static int idle_switch[NR_TYPES] = {
-	1,  /* dpidle switch */
+//dingyisheng@wind.mobi.com 20170227 begin
+	0,  /* dpidle switch */
+//dingyisheng@wind.mobi.com 20170227 end
 #if defined(CONFIG_MTK_DISABLE_SODI)
 	0,  /* soidle switch */
 #else
-	1,  /* soidle switch */
+//dingyisheng@wind-mobi.com 20161226 begin
+	0,  /* soidle switch */
+//dingyisheng@wind-mobi.com 20161226 end
 #endif
 	1,  /* slidle switch */
 	1,  /* rgidle switch */
@@ -435,7 +441,9 @@ static unsigned int slidle_condition_mask[NR_GRPS] = {
 };
 #elif defined(CONFIG_ARCH_MT6753)
 static int idle_switch[NR_TYPES] = {
-	1,  /* dpidle switch */
+//dingyisheng@wind.mobi.com 20170227 begin
+	0,  /* dpidle switch */
+//dingyisheng@wind.mobi.com 20170227 end
 #if defined(CONFIG_MTK_DISABLE_SODI)
 	0,  /* soidle switch */
 #else

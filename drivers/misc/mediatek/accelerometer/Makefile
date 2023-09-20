@@ -1,3 +1,4 @@
+#//huangzhaosong@wind-mobi.com 20151231 s---
 # In case the platform does NOT support this type of sensors
 ccflags-y += -I$(srctree)/drivers/misc/mediatek/hwmon/include
 
@@ -36,4 +37,8 @@ obj-$(CONFIG_MTK_BMC156_ACC)   +=  bmc156_acc/
 obj-$(CONFIG_MTK_MMA8653)   +=  mma8653/
 obj-$(CONFIG_MTK_ACCEL_RT3000)   +=  rt3000/
 obj-$(CONFIG_MTK_LSM6DS3HG)   +=  lsm6ds3hg/
+# hebiao@wind-mobi.com 2016323 begin
+obj-$(CONFIG_MTK_N2DM)   +=  n2dm/
+# hebiao@wind-mobi.com 2016323 end
+#//huangzhaosong@wind-mobi.com 20151231 e---
 endif

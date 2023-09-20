@@ -630,7 +630,11 @@ static int mag_real_driver_init(void)
 {
 	int i = 0;
 	int err = 0;
-
+    //ranyanhao@wind-mobi.com 20160325 begin
+    #ifdef CONFIG_WIND_DEVICE_INFO         	
+    extern char *g_msensor_name;	
+    #endif	
+    //ranyanhao@wind-mobi.com 20160325 end
 	MAG_LOG(" mag_real_driver_init +\n");
 	for (i = 0; i < MAX_CHOOSE_G_NUM; i++) {
 		MAG_LOG(" i=%d\n", i);
@@ -638,6 +642,11 @@ static int mag_real_driver_init(void)
 			MAG_LOG(" mag try to init driver %s\n", msensor_init_list[i]->name);
 			err = msensor_init_list[i]->init();
 			if (0 == err) {
+				//ranyanhao@wind-mobi.com 20160325 begin
+                #ifdef CONFIG_WIND_DEVICE_INFO         	
+                g_msensor_name = msensor_init_list[i]->name;	
+                #endif	
+				//ranyanhao@wind-mobi.com 20160325 end
 				MAG_LOG(" mag real driver %s probe ok\n", msensor_init_list[i]->name);
 				break;
 			}
@@ -888,8 +897,7 @@ int mag_data_report(enum MAG_TYPE type, int x, int y, int z, int status, int64_t
 	struct mag_context *cxt = NULL;
 
 	check_repeat_data(x, y, z);
-	if (MAGNETIC == type)
-		check_abnormal_data(x, y, z, status);
+	check_abnormal_data(x, y, z, status);
 
 	cxt = mag_context_obj;
 	if (MAGNETIC == type) {

@@ -512,10 +512,15 @@ static int led_switch_breath_pmic(enum mt65xx_led_pmic pmic_type,
 
 #define PMIC_PERIOD_NUM 8
 /* 100 * period, ex: 0.01 Hz -> 0.01 * 100 = 1 */
-int pmic_period_array[] = { 250, 500, 1000, 1250, 1666, 2000, 2500, 10000 };
+//modify mohongwu@wind-mobi.com 20160929 start
+int pmic_period_array[] = { 250, 500, 1000, 1250, 1666, 2000, 5000, 10000 };
 
+//qiancheng@wind-mobi.com 20160510 modify for feature 110118 start
 /* int pmic_freqsel_array[] = {99999, 9999, 4999, 1999, 999, 499, 199, 4, 0}; */
-int pmic_freqsel_array[] = { 0, 4, 199, 499, 999, 1999, 1999, 1999 };
+//int pmic_freqsel_array[] = { 0, 4, 199, 499, 999, 1999, 1999, 1999 };
+int pmic_freqsel_array[] = { 0, 4, 199, 499, 999, 1999, 4999, 9999 };
+//qiancheng@wind-mobi.com 20160510 modify for feature 110118 start
+//modify mohongwu@wind-mobi.com 20160929 end
 
 static int find_time_index_pmic(int time_ms)
 {
@@ -686,6 +691,39 @@ int mt_backlight_set_pwm(int pwm_num, u32 level, u32 div,
 
 	}
 }
+//hebiao@wind-mobi.com 20160219 add for SGM3785 begin
+int flashlight_set_pwm_old(u32 hduration, u32 lduration, u32 level)
+{
+	struct pwm_spec_config pwm_setting;
+	pwm_setting.pwm_no = 2;//liuying 20150206 
+	pwm_setting.mode = PWM_MODE_OLD;//PWM_MODE_FIFO; // New mode fifo and periodical mode
+	pwm_setting.pmic_pad = false;
+	pwm_setting.clk_div = CLK_DIV2;	//liuying@wind-mobi.com 20150312 for mt6732 use 26Mhz clk source
+	pwm_setting.clk_src = PWM_CLK_OLD_MODE_BLOCK;//PWM_CLK_NEW_MODE_BLOCK;
+
+	pwm_setting.PWM_MODE_OLD_REGS.IDLE_VALUE = 0;
+	pwm_setting.PWM_MODE_OLD_REGS.GUARD_VALUE = 0;
+	pwm_setting.PWM_MODE_OLD_REGS.GDURATION = 0;
+	pwm_setting.PWM_MODE_OLD_REGS.WAVE_NUM = 0;
+	pwm_setting.PWM_MODE_OLD_REGS.DATA_WIDTH = 99; // 100 level
+	pwm_setting.PWM_MODE_OLD_REGS.THRESH = level;
+
+	//set level
+	LEDS_DEBUG("flashlight_set_pwm_old func==%s line=%d:level is %d\n", __func__, __LINE__, level);
+	if(level >0 && level < 100)
+	{
+		pwm_set_spec_config(&pwm_setting);
+		LEDS_DEBUG("flashlight_set_pwm_old: old mode: thres/data_width is %d/%d\n", pwm_setting.PWM_MODE_OLD_REGS.THRESH, pwm_setting.PWM_MODE_OLD_REGS.DATA_WIDTH);
+	}
+	else
+	{
+		LEDS_DEBUG("flashlight_set_pwm_old Error level \n");
+		mt_pwm_disable(pwm_setting.pwm_no, pwm_setting.pmic_pad);
+	}
+
+	return 0;
+}
+//hebiao@wind-mobi.com 20160219 add for SGM3785 end
 
 void mt_led_pwm_disable(int pwm_num)
 {

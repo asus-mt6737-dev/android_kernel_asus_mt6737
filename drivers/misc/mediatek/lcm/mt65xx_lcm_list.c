@@ -34,6 +34,29 @@ LCM_DSI_MODE_CON lcm_dsi_mode;
 #endif
 
 LCM_DRIVER *lcm_driver_list[] = {
+//ranyanhao@wind-mobi.com 20160214 begin
+#if defined(HX8394F_HD720_DSI_VDO_BOE)
+	&hx8394f_hd720_dsi_vdo_boe_lcm_drv,
+#endif
+//ranyanhao@wind-mobi.com 20160214 end
+
+//hebiao@wind-mobi.com 20160720 begin
+#if defined(HX8394D_HD720_DSI_VDO_HLT)
+	&hx8394d_hd720_dsi_vdo_hlt_lcm_drv,
+#endif
+
+#if defined(ILI9881_HD720_DSI_VDO_HLT)
+	&ili9881_hd720_dsi_vdo_hlt_lcm_drv,
+#endif
+//hebiao@wind-mobi.com 20160720 end
+//zhangkaiyuan@wind-mobi.com 20161107 begin
+#if defined(OTM1289A_HSD_DSI_VDO)
+	&otm1289a_hsd_dsi_vdo_lcm_drv,
+#endif 
+#if defined(FL11281_HD720_DSI_VDO_HLT)
+	&fl11281_hd720_dsi_vdo_hlt_lcm_drv,
+#endif 
+//zhangkaiyuan@wind-mobi.com 20161107 end
 #if defined(OTM1284A_HD720_DSI_VDO_TM)
 	&otm1284a_hd720_dsi_vdo_tm_lcm_drv,
 #endif

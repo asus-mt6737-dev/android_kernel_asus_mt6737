@@ -5097,11 +5097,6 @@ static ssize_t cpufreq_freq_proc_write(struct file *file, const char __user *buf
 						cpu_dvfs_get_min_freq(p));
 			p->dvfs_disable_by_procfs = false;
 			goto end;
-		} else if (freq > cpu_dvfs_get_max_freq(p)) {
-			cpufreq_err("frequency should lower than %dKHz!\n",
-					cpu_dvfs_get_max_freq(p));
-			p->dvfs_disable_by_procfs = false;
-			goto end;
 		} else {
 			for (i = 0; i < p->nr_opp_tbl; i++) {
 				if (freq == p->opp_tbl[i].cpufreq_khz) {

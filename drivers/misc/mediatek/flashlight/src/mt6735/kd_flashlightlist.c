@@ -423,7 +423,12 @@ static long flashlight_ioctl_core(struct file *file, unsigned int cmd, unsigned 
 		i4RetValue = 1;
 		break;
 	case FLASH_IOC_IS_LOW_POWER:
-		logI("FLASH_IOC_IS_LOW_POWER");
+	// zhaozhensen@wind-mobi.com 20160712 begin
+	#ifdef CONFIG_WIND_ASUS_FLASHLIGHT_LOW_BAT_ON
+	logI("FLASH_IOC_IS_LOW_POWER BUT NOT CLOSED");
+	#else
+	logI("FLASH_IOC_IS_LOW_POWER AND CLOSED");
+	// zhaozhensen@wind-mobi.com 20160712 end
 		{
 			int isLow = 0;
 
@@ -438,6 +443,9 @@ static long flashlight_ioctl_core(struct file *file, unsigned int cmd, unsigned 
 				return -EFAULT;
 			}
 		}
+	// zhaozhensen@wind-mobi.com 20160712 begin
+	#endif
+	// zhaozhensen@wind-mobi.com 20160712 end
 		break;
 
 	case FLASH_IOC_LOW_POWER_DETECT_START:

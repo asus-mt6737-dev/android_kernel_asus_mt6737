@@ -80,4 +80,11 @@ obj-$(CONFIG_MTK_LENS_AD5820AF_SUPPORT)    += common/ad5820af/
 obj-$(CONFIG_MTK_LENS_WV511AAF_SUPPORT)    += common/wv511aaf/
 obj-$(CONFIG_MTK_LENS_AK7371AF_SUPPORT)    += common/ak7371af/
 
+# zhaozhensen@wind-mobi.com 20160729 begin 
+obj-$(CONFIG_MTK_LENS_GT9762AF_SUPPORT)    += common/gt9762af/
+obj-$(CONFIG_MTK_LENS_GT9762AF_NEW_SUPPORT)    += common/gt9762af_new/
+obj-$(CONFIG_MTK_LENS_GT9762AF_OV_SUPPORT)    += common/gt9762af_ov/
+obj-$(CONFIG_MTK_LENS_GT9762AF_S5K3M2_SUPPORT)    += common/gt9762af_s5k3m2/
+# zhaozhensen@wind-mobi.com 20160729 end
+
 endif

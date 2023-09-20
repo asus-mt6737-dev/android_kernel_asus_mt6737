@@ -510,7 +510,11 @@ static int acc_real_driver_init(void)
 {
 	int i = 0;
 	int err = 0;
-
+    //ranyanhao@wind-mobi.com 20160325 begin
+    #ifdef CONFIG_WIND_DEVICE_INFO         	
+    extern char *g_gsensor_name;	
+    #endif	
+    //ranyanhao@wind-mobi.com 20160325 end
 	ACC_LOG(" acc_real_driver_init +\n");
 	for (i = 0; i < MAX_CHOOSE_G_NUM; i++) {
 		ACC_LOG(" i=%d\n", i);
@@ -518,8 +522,12 @@ static int acc_real_driver_init(void)
 			ACC_LOG(" acc try to init driver %s\n", gsensor_init_list[i]->name);
 			err = gsensor_init_list[i]->init();
 			if (0 == err) {
-				ACC_LOG(" acc real driver %s probe ok\n",
-					gsensor_init_list[i]->name);
+				//ranyanhao@wind-mobi.com 20160325 begin
+                #ifdef CONFIG_WIND_DEVICE_INFO         	
+                g_gsensor_name = gsensor_init_list[i]->name;	
+                #endif	
+				//ranyanhao@wind-mobi.com 20160325 end
+				ACC_LOG(" acc real driver %s probe ok\n",gsensor_init_list[i]->name);
 				break;
 			}
 		}

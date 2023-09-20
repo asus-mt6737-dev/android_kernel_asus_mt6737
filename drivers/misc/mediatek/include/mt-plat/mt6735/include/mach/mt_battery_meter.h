@@ -1,19 +1,12 @@
-/*
- * Copyright (C) 2015 MediaTek Inc.
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- */
-
 #ifndef _CUST_BATTERY_METER_H
 #define _CUST_BATTERY_METER_H
 
+#if defined(CONFIG_MTK_BQ24196_SUPPORT) \
+	|| defined(CONFIG_MTK_BQ24296_SUPPORT) \
+	|| defined(CONFIG_MTK_BQ24261_SUPPORT)
+#define SWCHR_POWER_PATH
+#define EXTERNAL_SWCHR_SUPPORT
+#endif
 
 #if defined(CONFIG_ARCH_MT6735)
 /* ============================================================
@@ -28,13 +21,6 @@
 //#define CONFIG_DIS_CHECK_BATTERY
 //#define FIXED_TBAT_25
 */
-
-#if defined(CONFIG_MTK_BQ24196_SUPPORT) \
-	|| defined(CONFIG_MTK_BQ24296_SUPPORT) \
-	|| defined(CONFIG_MTK_BQ24261_SUPPORT)
-#define SWCHR_POWER_PATH
-#define EXTERNAL_SWCHR_SUPPORT
-#endif
 
 /* ADC resistor  */
 #define R_BAT_SENSE 4
@@ -81,8 +67,11 @@
 #define OCV_BOARD_COMPESATE	0 /*mV */
 #define R_FG_BOARD_BASE 1000
 #define R_FG_BOARD_SLOPE 1000 /*slope*/
-#define CAR_TUNE_VALUE 100 /*1.00*/
-
+#ifdef CONFIG_MTK_EMI_D1P
+#define CAR_TUNE_VALUE 104 /*1.00*/
+#else
+#define CAR_TUNE_VALUE 86 /*1.00*/
+#endif
 
 /* HW Fuel gague  */
 #define CURRENT_DETECT_R_FG 10  /*1mA*/
@@ -102,13 +91,18 @@
 #define BATTERYPSEUDO100		95
 #define BATTERYPSEUDO1			4
 
-/* #define Q_MAX_BY_SYS */
+#define Q_MAX_BY_SYS
 #define Q_MAX_SYS_VOLTAGE		3300
 #define SHUTDOWN_GAUGE0
 #define SHUTDOWN_GAUGE1_XMINS
 #define SHUTDOWN_GAUGE1_MINS		60
 
-#define SHUTDOWN_SYSTEM_VOLTAGE		3400
+//liqiang@wind-mobi.com 20170309 begin
+//#define SHUTDOWN_SYSTEM_VOLTAGE		3400
+#ifndef SHUTDOWN_SYSTEM_VOLTAGE
+#define SHUTDOWN_SYSTEM_VOLTAGE		(3400)
+#endif
+//liqiang@wind-mobi.com 20170309 end
 #define CHARGE_TRACKING_TIME		60
 #define DISCHARGE_TRACKING_TIME		10
 
@@ -163,13 +157,6 @@
 //#define CONFIG_DIS_CHECK_BATTERY
 //#define FIXED_TBAT_25
 */
-
-#if defined(CONFIG_MTK_BQ24196_SUPPORT) \
-	|| defined(CONFIG_MTK_BQ24296_SUPPORT) \
-	|| defined(CONFIG_MTK_BQ24261_SUPPORT)
-#define SWCHR_POWER_PATH
-#define EXTERNAL_SWCHR_SUPPORT
-#endif
 
 /* ADC resistor  */
 #define R_BAT_SENSE 4
@@ -237,13 +224,20 @@
 #define BATTERYPSEUDO100		95
 #define BATTERYPSEUDO1			4
 
-/* #define Q_MAX_BY_SYS */
+#define Q_MAX_BY_SYS
 #define Q_MAX_SYS_VOLTAGE		3300
 #define SHUTDOWN_GAUGE0
 #define SHUTDOWN_GAUGE1_XMINS
 #define SHUTDOWN_GAUGE1_MINS		60
 
-#define SHUTDOWN_SYSTEM_VOLTAGE		3400
+//liqiang@wind-mobi.com 20170309 begin
+//#define SHUTDOWN_SYSTEM_VOLTAGE		3400
+#ifndef SHUTDOWN_SYSTEM_VOLTAGE
+#define SHUTDOWN_SYSTEM_VOLTAGE		(3400)
+#endif
+//liqiang@wind-mobi.com 20170309 end
+
+
 #define CHARGE_TRACKING_TIME		60
 #define DISCHARGE_TRACKING_TIME		10
 
@@ -300,13 +294,6 @@
 //#define CONFIG_DIS_CHECK_BATTERY
 //#define FIXED_TBAT_25
 */
-
-#if defined(CONFIG_MTK_BQ24196_SUPPORT) \
-	|| defined(CONFIG_MTK_BQ24296_SUPPORT) \
-	|| defined(CONFIG_MTK_BQ24261_SUPPORT)
-#define SWCHR_POWER_PATH
-#define EXTERNAL_SWCHR_SUPPORT
-#endif
 
 /* ADC resistor  */
 #define R_BAT_SENSE 4
@@ -374,13 +361,21 @@
 #define BATTERYPSEUDO100		95
 #define BATTERYPSEUDO1			4
 
-/* #define Q_MAX_BY_SYS */
+#define Q_MAX_BY_SYS
 #define Q_MAX_SYS_VOLTAGE		3300
 #define SHUTDOWN_GAUGE0
 #define SHUTDOWN_GAUGE1_XMINS
 #define SHUTDOWN_GAUGE1_MINS		60
 
-#define SHUTDOWN_SYSTEM_VOLTAGE		3400
+
+
+//liqiang@wind-mobi.com 20170309 begin
+//#define SHUTDOWN_SYSTEM_VOLTAGE		3400
+#ifndef SHUTDOWN_SYSTEM_VOLTAGE
+#define SHUTDOWN_SYSTEM_VOLTAGE		(3400)
+#endif
+//liqiang@wind-mobi.com 20170309 end
+
 #define CHARGE_TRACKING_TIME		60
 #define DISCHARGE_TRACKING_TIME		10
 
@@ -421,10 +416,7 @@
 */
 #define FG_BAT_INT
 #define IS_BATTERY_REMOVE_BY_PMIC
-/* #define USE_EMBEDDED_BATTERY */
 
-/* Multi battery */
-/* #define MTK_MULTI_BAT_PROFILE_SUPPORT */
 #endif
 
 #endif	/*#ifndef _CUST_BATTERY_METER_H*/

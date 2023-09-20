@@ -68,6 +68,23 @@ static struct i2c_board_info kd_lens_dev __initdata = {
 
 
 static stAF_DrvList g_stAF_DrvList[MAX_NUM_OF_LENS] = {
+// zhaozhensen@wind-mobi.com 20160729 begin 
+	#ifdef CONFIG_MTK_LENS_GT9762AF_SUPPORT
+	{1, AFDRV_GT9762AF, GT9762AF_SetI2Cclient, GT9762AF_Ioctl, GT9762AF_Release},
+	#endif
+	
+	#ifdef CONFIG_MTK_LENS_GT9762AF_NEW_SUPPORT
+	{1, AFDRV_GT9762AF_NEW, GT9762AF_NEW_SetI2Cclient, GT9762AF_NEW_Ioctl, GT9762AF_NEW_Release},
+	#endif
+	
+	#ifdef CONFIG_MTK_LENS_GT9762AF_OV_SUPPORT
+	{1, AFDRV_GT9762AF_OV, GT9762AF_OV_SetI2Cclient, GT9762AF_OV_Ioctl, GT9762AF_OV_Release},
+	#endif
+	
+	#ifdef CONFIG_MTK_LENS_GT9762AF_S5K3M2_SUPPORT
+	{1, AFDRV_GT9762AF_S5K3M2, GT9762AF_S5K3M2_SetI2Cclient, GT9762AF_S5K3M2_Ioctl, GT9762AF_S5K3M2_Release},
+	#endif
+// zhaozhensen@wind-mobi.com 20160729 end
 #ifdef CONFIG_MTK_LENS_BU6424AF_SUPPORT
 	{1, AFDRV_BU6424AF, BU6424AF_SetI2Cclient, BU6424AF_Ioctl, BU6424AF_Release},
 #endif

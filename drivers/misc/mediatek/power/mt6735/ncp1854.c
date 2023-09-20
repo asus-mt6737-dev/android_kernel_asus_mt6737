@@ -41,9 +41,9 @@ static int ncp1854_driver_probe(struct i2c_client *client, const struct i2c_devi
 
 #ifdef CONFIG_OF
 static const struct of_device_id ncp1854_of_match[] = {
-	{.compatible = "ncp1854",},
+	{.compatible = "mediatek,SWITHING_CHARGER",},
 	{},
-};
+}; //modify by qiangang 20161018
 
 MODULE_DEVICE_TABLE(of, ncp1854_of_match);
 #endif
@@ -537,15 +537,17 @@ void ncp1854_set_iinlim_ta(unsigned int val)
 void ncp1854_dump_register(void)
 {
 	int i = 0;
-
+//modify by qiangang 20170504 begin
 	for (i = 0; i < ncp1854_REG_NUM; i++) {
-		if ((i == 3) || (i == 4) || (i == 5) || (i == 6))	/* do not dump read clear status register */
-			continue;
-		if ((i == 10) || (i == 11) || (i == 12) || (i == 13))	/* do not dump interrupt mask bit register */
-			continue;
+		//if ((i == 3) || (i == 4) || (i == 5) || (i == 6))	/* do not dump read clear status register */
+		//	continue;
+		//if ((i == 10) || (i == 11) || (i == 12) || (i == 13))	/* do not dump interrupt mask bit register */
+		//	continue;
 		ncp1854_read_byte(i, &ncp1854_reg[i]);
-		battery_log(BAT_LOG_FULL, "[ncp1854_dump_register] Reg[0x%X]=0x%X\n", i, ncp1854_reg[i]);
+		//battery_log(BAT_LOG_FULL, "[ncp1854_dump_register] Reg[0x%X]=0x%X\n", i, ncp1854_reg[i]);
+		printk("[ncp1854_dump_register] Reg[0x%X]=0x%X\n", i, ncp1854_reg[i]);
 	}
+//modify by qiangang 20170504 begin
 }
 
 void ncp1854_read_register(int i)
@@ -739,8 +741,9 @@ static void __exit ncp1854_exit(void)
 {
 	i2c_del_driver(&ncp1854_driver);
 }
-
-module_init(ncp1854_init);
+//yutao@wind-mobi.com modefy the init time of ncp1854 begin 
+subsys_initcall(ncp1854_init);
+//yutao@wind-mobi.com modefy the init time of ncp1854 end
 module_exit(ncp1854_exit);
 /* subsys_initcall(ncp1854_subsys_init); */
 

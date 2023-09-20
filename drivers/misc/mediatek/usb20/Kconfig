@@ -58,3 +58,13 @@ config MTK_MUSB_SW_WITCH_MODE
     	help
 	  Usb host/device/idle mode switch through command, not only depend on ID pin.
 	  Say Y here if your want to use software to switch usb mode.
+	  
+#yutao@wind-mobi.com add new macro for otg input function begin 
+config MTK_OTG_HAS_INPUT
+    bool "MTK_OTG_HAS_INPUT"
+    default n
+	help
+	  This is a feature for input purpose.
+	  It define the functiong to report input event..
+
+#yutao@wind-mobi.com add new macro end

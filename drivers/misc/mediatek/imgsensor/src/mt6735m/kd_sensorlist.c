@@ -100,6 +100,12 @@ static struct i2c_board_info i2c_devs2 __initdata = {I2C_BOARD_INFO(CAMERA_HW_DR
 	struct regulator *regSubVCAMD = NULL;
 #endif
 
+/*dingyisheng@wind-mobi.com 20180510 begin*/
+ int front_camera = 0;
+ int back_camera = 0;
+ char *camera_res_info = NULL;
+/*dingyisheng@wind-mobi.com 20180510 end*/
+
 struct device *sensor_device = NULL;
 
 #define SENSOR_WR32(addr, data)    mt65xx_reg_sync_writel(data, addr)	/* For 89 Only.   // NEED_TUNING_BY_PROJECT */
@@ -1497,11 +1503,20 @@ static inline int adopt_CAMERA_HW_CheckIsAlive(void)
 					PK_DBG(" No Sensor Found");
 					err = ERROR_SENSOR_CONNECT_FAIL;
 				} else {
-
+					//dingyisheng@wind-mobi.com 20180606 begin
 					PK_DBG(" Sensor found ID = 0x%x\n", sensorID);
+					camera_res_info = g_invokeSensorNameStr[i];
 					snprintf(mtk_ccm_name, sizeof(mtk_ccm_name),
 						 "%s CAM[%d]:%s;", mtk_ccm_name,
 						 g_invokeSocketIdx[i], g_invokeSensorNameStr[i]);
+					if(NULL != camera_res_info){
+						if(0 == strcmp(camera_res_info,"imx258mipiraw") || 0 == strcmp(camera_res_info,"s5k3l8mipiraw") || 0 == strcmp(camera_res_info,"s5k3m2mipiraw") || 0 == strcmp(camera_res_info,"s5k3l8mipirawnew") || 0 == strcmp(camera_res_info,"ov13853mipiraw")){
+							back_camera = 13;
+						}else if(0 == strcmp(camera_res_info,"hi551mipiraw") || 0 == strcmp(camera_res_info,"ov5670mipiraw") || 0 == strcmp(camera_res_info,"hi553mipiraw") || 0 == strcmp(camera_res_info,"s5k5e8yxmipiraw")){
+							front_camera =5;
+						}
+					}
+					//dingyisheng@wind-mobi.com 20180606 end
 					err = ERROR_NONE;
 				}
 				if (ERROR_NONE != err) {
@@ -2762,8 +2777,11 @@ inline static int kdSetSensorMclk(int *pBuf)
 	PK_INFO("[CAMERA SENSOR] kdSetSensorMclk on=%d, freq= %d\n", pSensorCtrl->on,
 		pSensorCtrl->freq);
 	if (1 == pSensorCtrl->on) {
-		if (0 < (pSensorCtrl->freq) && (pSensorCtrl->freq) < MCLK_MAX_GROUP)
-			clkmux_sel(MT_MUX_CAMTG, pSensorCtrl->freq, "CAMERA_SENSOR");
+		enable_mux(MT_MUX_CAMTG, "CAMERA_SENSOR");
+		clkmux_sel(MT_MUX_CAMTG, pSensorCtrl->freq, "CAMERA_SENSOR");
+	} else {
+
+		disable_mux(MT_MUX_CAMTG, "CAMERA_SENSOR");
 	}
 	return ret;
 /* #endif */
@@ -3428,7 +3446,7 @@ static long CAMERA_HW_Ioctl(struct file *a_pstFile,
 		break;
 
 	case KDIMGSENSORIOC_X_SET_SHUTTER_GAIN_WAIT_DONE:
-		/*i4RetValue = kdSensorSetExpGainWaitDone((int *)pBuff);*/
+		i4RetValue = kdSensorSetExpGainWaitDone((int *)pBuff);
 		break;
 
 	case KDIMGSENSORIOC_X_SET_CURRENT_SENSOR:
@@ -3517,7 +3535,6 @@ static int CAMERA_HW_Open(struct inode *a_pstInode, struct file *a_pstFile)
 
 	/*  */
 	atomic_inc(&g_CamDrvOpenCnt);
-	enable_mux(MT_MUX_CAMTG, "CAMERA_SENSOR");
 	return 0;
 }
 
@@ -3535,7 +3552,6 @@ static int CAMERA_HW_Release(struct inode *a_pstInode, struct file *a_pstFile)
 /* PK_DBG("[CAMERA_HW_Release] g_CamDrvOpenCnt %d\n",g_CamDrvOpenCnt); */
 	/* if (atomic_read(&g_CamDrvOpenCnt) == 0) */
 	checkPowerBeforClose(CAMERA_HW_DRVNAME1);
-	disable_mux(MT_MUX_CAMTG, "CAMERA_SENSOR");
 
 	return 0;
 }
@@ -4370,6 +4386,25 @@ static struct file_operations fcamera_proc_fops1 = {
 	.open = proc_camera_info_open,
 	.read = seq_read,
 };
+/*dingyisheng@wind-mobi.com 20180510 begin*/
+static int camera_proc_show(struct seq_file *m, void *v)
+{
+	seq_printf(m,"%dM+%dM\n",front_camera,back_camera);
+    return 0;
+}
+static int camera_proc_open(struct inode *inode, struct file *file)
+{
+	return single_open(file, camera_proc_show, NULL);
+}
+static const struct file_operations camera_res_fops = {
+	.owner		= THIS_MODULE,
+	.open		= camera_proc_open,
+	.read		= seq_read,
+	.llseek		= seq_lseek,
+	.release	= single_release,
+	//.write		= camera_proc_write,
+};
+/*dingyisheng@wind-mobi.com 20180510 end*/
 
 /*=======================================================================
   * CAMERA_HW_i2C_init()
@@ -4483,7 +4518,9 @@ static int __init CAMERA_HW_i2C_init(void)
 	atomic_set(&g_CamDrvOpenCnt2, 0);
 	atomic_set(&g_CamHWOpening, 0);
 
-
+	//dingyisheng@wind-mobi.com 20180510 begin
+	proc_create("driver/camera_res", 0660, NULL, &camera_res_fops);
+	//dingyisheng@wind-mobi.com 20180510 end
 
 	return 0;
 }
@@ -4495,6 +4532,7 @@ static void __exit CAMERA_HW_i2C_exit(void)
 {
 	platform_driver_unregister(&g_stCAMERA_HW_Driver);
 	platform_driver_unregister(&g_stCAMERA_HW_Driver2);
+	remove_proc_entry("driver/camera_res",NULL);/*dingyisheng@wind-mobi.com 20180510*/
 }
 
 

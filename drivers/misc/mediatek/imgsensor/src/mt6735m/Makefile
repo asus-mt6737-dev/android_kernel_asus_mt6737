@@ -16,23 +16,24 @@
 #
 
 
-
+# modified by lifengxiang@wind-mobi.com 20160801 begin
 define FILTER_PROJECT_DRV
-ifeq ($(wildcard $(srctree)/drivers/misc/mediatek/imgsensor/src/$(MTK_PLATFORM)/camera_project/$(ARCH_MTK_PROJECT)/$(1)),)
+ifeq ($(wildcard $(srctree)/drivers/misc/mediatek/imgsensor/src/mt6735m/camera_project/$(ARCH_MTK_PROJECT)/$(1)),)
 platform_drv += $(1)
 else
 project_drv += camera_project/$(ARCH_MTK_PROJECT)/$(1)
 endif
 endef
+# modified by lifengxiang@wind-mobi.com 20160801 end
 
 MTK_PLATFORM := $(subst ",,$(CONFIG_MTK_PLATFORM))
 ARCH_MTK_PROJECT := $(subst ",,$(CONFIG_ARCH_MTK_PROJECT))
 
 ifneq ($(CONFIG_MTK_IMGSENSOR),m)
 obj-y				+= kd_sensorlist.o
-
-$(info -= project path  $(srctree)/drivers/misc/mediatek/imgsensor/src/$(MTK_PLATFORM)/camera_project/$(ARCH_MTK_PROJECT)/ =-)
-
+# modified by lifengxiang@wind-mobi.com 20160801 begin
+$(info -= project path  $(srctree)/drivers/misc/mediatek/imgsensor/src/mt6735m/camera_project/$(ARCH_MTK_PROJECT)/ =-)
+# modified by lifengxiang@wind-mobi.com 20160801 end
 ifneq ($(wildcard $(srctree)/drivers/misc/mediatek/imgsensor/src/mt6735m/camera_project/$(ARCH_MTK_PROJECT)/camera_hw),)
 obj-y				+= camera_project/$(ARCH_MTK_PROJECT)/camera_hw/
 $(info by porject kd_camera_hw)

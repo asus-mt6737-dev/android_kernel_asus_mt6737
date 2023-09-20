@@ -270,3 +270,41 @@ config MTK_LENS_WV511AAF_SUPPORT
     This config is used to enable the corresponding
     lens driver for the camera sensor module
     Set as y if the driver is used in this project
+
+#zhaozhensen@wind-mobi.com 20160729 begin
+config MTK_LENS_GT9762AF_SUPPORT
+  bool "GT9762AF Lens Driver"
+  default n
+  help
+    GT9762AF Lens Driver
+    This config is used to enable the corresponding
+    lens driver for the camera sensor module
+    Set as y if the driver is used in this project
+	
+config MTK_LENS_GT9762AF_NEW_SUPPORT
+  bool "GT9762AF_NEW Lens Driver"
+  default n
+  help
+    GT9762AF_NEW Lens Driver
+    This config is used to enable the corresponding
+    lens driver for the camera sensor module
+    Set as y if the driver is used in this project
+
+config MTK_LENS_GT9762AF_OV_SUPPORT
+  bool "GT9762AF_OV Lens Driver"
+  default n
+  help
+    GT9762AF_OV Lens Driver
+    This config is used to enable the corresponding
+    lens driver for the camera sensor module
+    Set as y if the driver is used in this project
+	
+config MTK_LENS_GT9762AF_S5K3M2_SUPPORT
+  bool "GT9762AF_S5K3M2 Lens Driver"
+  default n
+  help
+    GT9762AF_S5K3M2 Lens Driver
+    This config is used to enable the corresponding
+    lens driver for the camera sensor module
+    Set as y if the driver is used in this project
+#zhaozhensen@wind-mobi.com 20160729 end

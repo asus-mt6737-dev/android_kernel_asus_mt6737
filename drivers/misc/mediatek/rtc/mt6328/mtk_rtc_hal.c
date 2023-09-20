@@ -117,7 +117,14 @@ u16 rtc_spare_reg[][3] = {
 	{RTC_PDN2, 0x1, 7},
 	{RTC_PDN2, 0x1, 15},
 	{RTC_SPAR0, 0x1, 6},
+//liqiang@wind-mobi.com begin 20170309
+#ifdef CONFIG_WIND_ASUS_BATTERY_LIFE_SUPPORT
+	{RTC_SPAR0, 0x1, 7},
+	{RTC_SPAR0, 0xf, 8}
+#else
 	{RTC_SPAR0, 0x1, 7}
+#endif
+	//liqiang@wind-mobi.com end 20170309
 };
 
 void hal_rtc_set_abb_32k(u16 enable)

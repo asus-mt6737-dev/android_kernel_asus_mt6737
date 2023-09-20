@@ -35,9 +35,30 @@
 #include <linux/of_irq.h>
 #include <linux/of_address.h>
 #endif
+#include <linux/kthread.h>
 
 #include <mt-plat/mt_boot_common.h>
+#ifdef CONFIG_USB_MTK_OTG
 
+#include "../../power/mt6735/ncp1854.h"		//tuwenzan@wind-mobi.com add at 20160225 begin
+#endif
+
+//lvwenkang@wind-mobi.com add  20170331 begin
+#ifdef	CONFIG_WIND_ASUS_OTG_POWER_SUPPLY_UPDATA
+unsigned int g_otg_host_state = 2; 
+extern struct work_struct  usb_otg_check;
+#endif
+//lvwenkang@wind-mobi.com add 20170331  end
+
+//yutao@wind-mobi.com add key  h file begin
+//lvwenkang@wind-mobi.com add  20170331 begin
+#ifdef CONFIG_WIND_ASUS_OTG_POWER_SUPPLY_UPDATA
+
+#else
+#include <linux/input.h>
+#endif
+//lvwenkang@wind-mobi.com add  20170331 end
+//yutao@wind-mobi.com add key  h file end
 #ifdef CONFIG_OF
 struct device_node		*usb_node;
 static unsigned int iddig_pin;
@@ -47,7 +68,56 @@ static unsigned int drvvbus_pin;
 static unsigned int drvvbus_pin_mode;
 static unsigned int drvvbus_if_config = 1;
 #endif
+//yutao@wind-mobi.com add usbid key begin 
+//lvwenkang@wind-mobi.com add  20170331 begin
+#ifdef CONFIG_WIND_ASUS_OTG_POWER_SUPPLY_UPDATA
 
+#else
+static struct input_dev *input = NULL;
+#define OTG_ID_KEY_IN   KEY_F11
+#define OTG_ID_KEY_OUT  KEY_F12
+#endif
+//lvwenkang@wind-mobi.com add  20170331 end
+//yutao@wind-mobi.com add usbid key end
+
+//yutao@wind-mobi.com add 20160603 begin
+//lvwenkang@wind-mobi.com add  20170331 begin
+#if defined(CONFIG_MTK_OTG_HAS_INPUT) || defined(CONFIG_WIND_ASUS_OTG_POWER_SUPPLY_UPDATA)
+extern signed int battery_meter_get_charger_voltage(void);
+struct task_struct *otg_thread=NULL;
+static DEFINE_MUTEX(otg_mutex);
+ static int otg_plug_times_flag =0; //yutao@wind-mobi.com add this flag for some boards will cause one plug out irq.
+static int ncp1854_int_status_kthread(void *data)
+{
+    unsigned int charger_vol = 0;
+    //printk(" ncp1854_int_status_kthread\n");
+    while(1)
+	{
+        msleep(900);
+        if( kthread_should_stop())  return -1;
+        mutex_lock(&otg_mutex);
+		#if defined CONFIG_MTK_NCP1854_SUPPORT
+        if(1 == ncp1854_get_otg_en())
+        {
+            charger_vol = battery_meter_get_charger_voltage();
+            //printk("ncp1854 kthread charger_vol: %d \n", charger_vol);
+            if(charger_vol < 2500)
+            {
+                //printk("enable otg\n");
+                ncp1854_set_otg_en(0);
+                msleep(50);
+                ncp1854_set_chg_en(0);
+                ncp1854_set_otg_en(1);
+            }
+        }
+		#endif
+        mutex_unlock(&otg_mutex);
+    }
+return 0;
+}
+#endif
+//lvwenkang@wind-mobi.com add  20170331 end
+//yutao@wind-mobi.com add 20160603 end
 #if !defined(CONFIG_MTK_LEGACY)
 struct pinctrl *pinctrl;
 struct pinctrl_state *pinctrl_iddig;
@@ -506,7 +576,39 @@ static void musb_id_pin_work(struct work_struct *data)
 		musb_start(mtk_musb);
 		MUSB_HST_MODE(mtk_musb);
 		switch_int_to_device(mtk_musb);
-
+		
+			//yutao@wind-mobi.com add report otg int key to the input hub begin
+			 //lvwenkang@wind-mobi.com add  20170331 begin
+	#ifdef CONFIG_WIND_ASUS_OTG_POWER_SUPPLY_UPDATA
+	
+	#else
+		input_report_key(input, OTG_ID_KEY_IN, 1);
+	    input_sync(input);
+		input_report_key(input, OTG_ID_KEY_IN, 0);
+	    input_sync(input);
+		//printk("yutao report the otg cable in  int event\n");	
+		 otg_plug_times_flag++;
+	otg_thread = kthread_create(ncp1854_int_status_kthread, NULL, "ncp1854_int_status_kthread");
+	if(!IS_ERR(otg_thread)){
+	//printk("kthread start success!!\n");
+	wake_up_process(otg_thread);
+		}
+	#endif
+	//lvwenkang@wind-mobi.com add  20170331 end
+	//yutao@wind-mobi.com add report otg int key to the input hub end
+//lvwenkang@wind-mobi.com add  20170331 begin	
+#ifdef	CONFIG_WIND_ASUS_OTG_POWER_SUPPLY_UPDATA
+	otg_plug_times_flag++;
+	otg_thread = kthread_create(ncp1854_int_status_kthread, NULL, "ncp1854_int_status_kthread");
+	if(!IS_ERR(otg_thread)){
+	//printk("kthread start success!!\n");
+	wake_up_process(otg_thread);
+		}
+	g_otg_host_state = 1;
+	 
+	schedule_work(&usb_otg_check);
+#endif
+//lvwenkang@wind-mobi.com add  20170331 end
 		if (host_plug_test_enable && !host_plug_test_triggered)
 			queue_delayed_work(host_plug_test_wq, &host_plug_test_work, 0);
 	} else {
@@ -539,6 +641,43 @@ static void musb_id_pin_work(struct work_struct *data)
 		mtk_musb->xceiv->state = OTG_STATE_B_IDLE;
 		MUSB_DEV_MODE(mtk_musb);
 		switch_int_to_host(mtk_musb);
+	//yutao@wind-mobi.com add report otg int key to the input hub begin
+	//lvwenkang@wind-mobi.com add  20170331 begin
+	#ifdef CONFIG_WIND_ASUS_OTG_POWER_SUPPLY_UPDATA
+
+	#else
+	
+		input_report_key(input, OTG_ID_KEY_OUT, 1);
+	    input_sync(input);
+		input_report_key(input, OTG_ID_KEY_OUT, 0);
+	    input_sync(input);
+		printk("yutao report the otg cable out  int event\n");
+		if(otg_plug_times_flag==1){
+		
+			 if(!IS_ERR(otg_thread)){
+			//printk("kthread stop success!!\n");
+			kthread_stop(otg_thread);
+		}
+		otg_plug_times_flag=0;
+		}
+	#endif
+	//lvwenkang@wind-mobi.com add  20170331 end
+	//yutao@wind-mobi.com add report otg int key to the input hub end
+//lvwenkang@wind-mobi.com add  20170331 begin	
+#ifdef	CONFIG_WIND_ASUS_OTG_POWER_SUPPLY_UPDATA
+		if(otg_plug_times_flag==1){
+		
+			 if(!IS_ERR(otg_thread)){
+			//printk("kthread stop success!!\n");
+			kthread_stop(otg_thread);
+		}
+		otg_plug_times_flag=0;
+		}
+		g_otg_host_state = 0;
+		schedule_work(&usb_otg_check);
+		 
+#endif
+//lvwenkang@wind-mobi.com add  20170331  end
 	}
 out:
 	DBG(0, "work end, is_host=%d\n", mtk_musb->is_host);
@@ -618,6 +757,34 @@ static void otg_int_init(void)
 		pr_err("USB IDDIG IRQ LINE not available!!\n");
 	else
 		pr_debug("USB IDDIG IRQ LINE available!!\n");
+//yutao@wind-mobi.com report key first
+//lvwenkang@wind-mobi.com add  20170331 begin
+#ifdef CONFIG_WIND_ASUS_OTG_POWER_SUPPLY_UPDATA
+
+#else
+	input = input_allocate_device();
+	if(!input)
+	{
+		printk("%s: yutao input_allocate_device failed.\n", __func__);
+	};
+	__set_bit(EV_KEY, input->evbit);
+	__set_bit(EV_ABS, input->evbit);
+	__set_bit(EV_SYN, input->evbit);
+	input_set_capability(input, EV_KEY, OTG_ID_KEY_IN);
+	input_set_capability(input, EV_KEY, OTG_ID_KEY_OUT);
+	__set_bit(OTG_ID_KEY_IN, input->evbit);
+	__set_bit(OTG_ID_KEY_OUT, input->evbit);
+	input->name = "otgid";
+	input->id.bustype = BUS_USB;
+	ret = input_register_device(input);
+	if (ret) {
+        input_free_device(input);
+        printk("%s: yutaofailed to register input device.\n",__func__);
+       
+    }
+#endif
+//lvwenkang@wind-mobi.com add  20170331 end
+//yutao@wind-mobi.com report key first end
 #else
 	u32 phy_id_pull = 0;
 

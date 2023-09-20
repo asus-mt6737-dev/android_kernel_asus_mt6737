@@ -31,3 +31,9 @@ source "drivers/misc/mediatek/magnetometer/yamaha532-new/Kconfig"
 source "drivers/misc/mediatek/magnetometer/bmc156_mag/Kconfig"
 source "drivers/misc/mediatek/magnetometer/st480/Kconfig"
 source "drivers/misc/mediatek/magnetometer/maghub/Kconfig"
+#ranyanhao@wind-mobi.com 20160118 begin
+source "drivers/misc/mediatek/magnetometer/mmc3524x/Kconfig"
+#ranyanhao@wind-mobi.com 20160118 end
+#hebiao@wind-mobi.com 20160324 add begin
+source "drivers/misc/mediatek/magnetometer/qmcX983/Kconfig"
+#hebiao@wind-mobi.com 20160324 add end

@@ -177,7 +177,7 @@ static unsigned int charging_hw_init(void *data)
 	unsigned int ncp1854_status;
 	unsigned int status = STATUS_OK;
 
-	battery_log(BAT_LOG_FULL, "[BATTERY:ncp1854] ChargerHwInit_ncp1854\n");
+	pr_notice("[BATTERY:ncp1854] ChargerHwInit_ncp1854\n");
 
 	ncp1854_status = ncp1854_get_chip_status();
 	ncp1854_set_trans_en(0);
@@ -190,7 +190,7 @@ static unsigned int charging_hw_init(void *data)
 	if ((ncp1854_status == 0x8) || (ncp1854_status == 0x9) || (ncp1854_status == 0xA))
 		ncp1854_set_ctrl_vbat(0x1C);	/* VCHG = 4.0V */
 
-	ncp1854_set_ieoc(0x0);
+	ncp1854_set_ieoc(0x4); /* cut off current = 200mA   modified by qiangang@wind-mobi.com 20170427*/
 	ncp1854_set_iweak(0x3);	/* weak charge current = 300mA */
 
 	ncp1854_set_aicl_en(0x1);	/* enable AICL as PT team suggest */
@@ -211,7 +211,7 @@ static unsigned int charging_dump_register(void *data)
 {
 	unsigned int status = STATUS_OK;
 
-	battery_log(BAT_LOG_FULL, "charging_dump_register\r\n");
+	pr_notice("charging_dump_register\r\n");
 
 	ncp1854_dump_register();
 
@@ -251,18 +251,19 @@ static unsigned int charging_set_cv_voltage(void *data)
 	unsigned int cv_value = *(unsigned int *) (data);
 	unsigned int array_size;
 	unsigned int set_chr_cv;
-
+	printk("qiangang   cv_value=%d\n",cv_value);
 	if (batt_cust_data.high_battery_voltage_support)
-		cv_value = BATTERY_VOLT_04_350000_V;
+		cv_value = BATTERY_VOLT_04_380000_V;   //modified by qiangang@wind-mobi.com  20170427
 
 	/* use nearest value */
 	array_size = GETARRAYNUM(VBAT_CV_VTH);
 	set_chr_cv = bmt_find_closest_level(VBAT_CV_VTH, array_size, cv_value);
-
+printk("qiangang   set_chr_cv=%d\n",set_chr_cv);
 	register_value =
 	    charging_parameter_to_value(VBAT_CV_VTH, GETARRAYNUM(VBAT_CV_VTH), set_chr_cv);
 
 	ncp1854_set_ctrl_vbat(register_value);
+	
 
 	return status;
 }
@@ -703,7 +704,7 @@ signed int chr_control_interface(CHARGING_CTRL_CMD cmd, void *data)
 			return charging_func[cmd](data);
 	}
 
-	battery_log(BAT_LOG_FULL, "[%s]UNSUPPORT Function: %d\n", __func__, cmd);
+	pr_debug("[%s]UNSUPPORT Function: %d\n", __func__, cmd);
 
 	return STATUS_UNSUPPORTED;
 }

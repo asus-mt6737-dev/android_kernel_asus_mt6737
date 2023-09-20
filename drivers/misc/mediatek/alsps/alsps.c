@@ -693,6 +693,11 @@ static struct platform_driver als_ps_driver = {
 
 static int alsps_real_driver_init(void)
 {
+    //ranyanhao@wind-mobi.com 20160325 begin
+    #ifdef CONFIG_WIND_DEVICE_INFO         	
+    extern char *g_alsensor_name;	
+    #endif	
+    //ranyanhao@wind-mobi.com 20160325 end
 	int i = 0;
 	int err = 0;
 
@@ -704,6 +709,11 @@ static int alsps_real_driver_init(void)
 			err = alsps_init_list[i]->init();
 			if (0 == err) {
 				ALSPS_LOG(" alsps real driver %s probe ok\n", alsps_init_list[i]->name);
+				//ranyanhao@wind-mobi.com 20160325 begin
+                #ifdef CONFIG_WIND_DEVICE_INFO         	
+                g_alsensor_name = alsps_init_list[i]->name;	
+                #endif	
+				//ranyanhao@wind-mobi.com 20160325 end
 				break;
 			}
 		}
