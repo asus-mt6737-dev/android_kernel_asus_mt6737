@@ -88,7 +88,16 @@ initrd=0x44000000,0x300000 loglevel=8 androidboot.hardware=mt6735";
 	lcm: lcm {
 		compatible = "mediatek,lcm";
 	};
-
+/* zhaozhensen@wind-mobi.com 20160423 begin*/
+	lcmbias: lcmbias {
+		compatible = "mediatek,lcmbias";
+	};
+	/* zhaozhensen@wind-mobi.com 20160423 end*/
+	/* yutao@wind-mobi.com 20160601 begin*/
+	otgsw: otgsw {
+		compatible = "mediatek,otgsw";
+	};
+	/* yutao@wind-mobi.com 20160601 end*/
 	/* ATF logger SW IRQ number 281 = 32 + 249 */
 	atf_logger {
 		compatible = "mediatek,atf_logger";
@@ -805,8 +814,10 @@ initrd=0x44000000,0x300000 loglevel=8 androidboot.hardware=mt6735";
 					"uart1_tx_clear";
 
 			pinctrl-0 = <&uart1_gpio_def_cfg>;
-			pinctrl-1 = <&uart1_rx_set_cfg>;
-			pinctrl-2 = <&uart1_rx_clr_cfg>;
+		/*zhaozhensen@wind-mobi.com 20160401 begin*/
+		/*	pinctrl-1 = <&uart1_rx_set_cfg>;	*/
+		/*	pinctrl-2 = <&uart1_rx_clr_cfg>; 	*/
+		/*zhaozhensen@wind-mobi.com 20160401 end*/
 			pinctrl-3 = <&uart1_tx_set_cfg>;
 			pinctrl-4 = <&uart1_tx_clr_cfg>;
 			status = "okay";
@@ -1085,7 +1096,7 @@ initrd=0x44000000,0x300000 loglevel=8 androidboot.hardware=mt6735";
 			audmiso-gpio = <144 0>;
 			audmosi-gpio = <145 0>;
 			vowclk-gpio = <148 0>;
-			extspkamp-gpio = <117 0>;
+		/*	extspkamp-gpio = <117 0>;  remove to project_dts */
 			i2s1clk-gpio = <80 0>;
 			i2s1dat-gpio = <78 0>;
 			i2s1mclk-gpio = <9 0>;
@@ -1732,6 +1743,11 @@ initrd=0x44000000,0x300000 loglevel=8 androidboot.hardware=mt6735";
 			vtouch-supply = <&mt_pmic_vgp1_ldo_reg>;
 		};
 
+		/*********zhenglihong@wind-mobi.com 20160511 begin************/ 
+		hall_1: hall_1 {
+			compatible = "mediatek,hall-eint";
+		};
+		/*********zhenglihong@wind-mobi.com 20160511 end************/ 
 		accdet: accdet {
 			compatible = "mediatek,mt6735-accdet";
 		};
@@ -3399,9 +3415,3 @@ initrd=0x44000000,0x300000 loglevel=8 androidboot.hardware=mt6735";
 };
 
 #include <trusty.dtsi>
-#include <generated/autoconf.h>
-#ifdef CONFIG_MTK_HAFG_20
-#include "mt6735_fg20_bat_setting.dtsi"
-#else
-#include "mt6735_oldgauge_bat_setting.dtsi"
-#endif
