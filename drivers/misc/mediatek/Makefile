@@ -16,7 +16,6 @@ MTK_PLATFORM := $(subst ",,$(CONFIG_MTK_PLATFORM))
 # zhaozhensen@wind-mobi.com 20160226 begin
 #subdir-ccflags-y += -Werror
 # zhaozhensen@wind-mobi.com 20160226 end
-subdir-ccflags-y += -I$(srctree)/drivers/misc/mediatek/hibcore
 subdir-ccflags-y += -I$(srctree)/drivers/misc/mediatek/include
 subdir-ccflags-y += -I$(srctree)/drivers/misc/mediatek/include/mt-plat/$(MTK_PLATFORM)/include
 subdir-ccflags-y += -I$(srctree)/drivers/misc/mediatek/include/mt-plat
