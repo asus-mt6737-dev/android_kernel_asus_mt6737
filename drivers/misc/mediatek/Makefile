@@ -13,12 +13,21 @@
 
 #$(call all-subdir-src-or-makefile)
 MTK_PLATFORM := $(subst ",,$(CONFIG_MTK_PLATFORM))
-subdir-ccflags-y += -Werror
+# zhaozhensen@wind-mobi.com 20160226 begin
+#subdir-ccflags-y += -Werror
+# zhaozhensen@wind-mobi.com 20160226 end
+subdir-ccflags-y += -I$(srctree)/drivers/misc/mediatek/hibcore
 subdir-ccflags-y += -I$(srctree)/drivers/misc/mediatek/include
 subdir-ccflags-y += -I$(srctree)/drivers/misc/mediatek/include/mt-plat/$(MTK_PLATFORM)/include
 subdir-ccflags-y += -I$(srctree)/drivers/misc/mediatek/include/mt-plat
 subdir-ccflags-y += -I$(srctree)/drivers/mmc/host/mediatek/$(MTK_PLATFORM)
 
+#ranyanhao@wind-mobi.com 20160104 begin
+obj-$(CONFIG_WIND_DEVICE_INFO) += wind_device_info/
+#zhenglihong@wind-mobi.com 20160508 begin
+obj-$(CONFIG_MTK_AFS121_SUPPORT) += fingerprint/
+#zhenglihong@wind-mobi.com 20160508 end
+#ranyanhao@wind-mobi.com 20160104 end
 obj-$(CONFIG_MTK_BASE_POWER) += base/
 obj-$(CONFIG_MTK_POWER_GS) += power_gs/
 obj-$(CONFIG_MEDIATEK_SOLUTION)	+= sched/
@@ -157,6 +166,9 @@ endif
 obj-$(CONFIG_TRUSTONIC_TEE_SUPPORT) += gud/
 obj-$(CONFIG_TRUSTONIC_TEE_SUPPORT) += secmem/
 obj-$(CONFIG_MICROTRUST_TEE_SUPPORT) += teei/
+#dingyisheng@wind-mobi.com 20161115 begin
+obj-$(CONFIG_TRUSTKERNEL_TEE_SUPPORT) += tkcore/
+#dingyisheng@wind-mobi.com 20161115 end
 obj-$(CONFIG_MTK_DEBUG_LATCH)	+= debug_latch/
 obj-$(CONFIG_MTK_DEBUG_TRACER)	+= debug_tracer/
 obj-$(CONFIG_MTK_WATCHPOINT) += watchpoint/
@@ -171,6 +183,13 @@ obj-$(CONFIG_MTK_SVP) += memory-ssvp/
 obj-$(CONFIG_ZONE_MOVABLE_CMA) += zone_movable_cma/
 
 obj-y += performance/
+#yutao@wind-mobi.com 20160601 begin
+obj-$(CONFIG_MTK_USBSW) += usbsw/
+#yutao@wind-mobi.com 20160601 end
+
+#yutao@wind-mobi.com 20160625 begin
+obj-$(CONFIG_MTK_OTG_CHG_CTL) += otg_chg_ctl/
+#yutao@wind-mobi.com 20160625 end
 
 # gator driver is platform-independent
 ifneq ($(wildcard $(srctree)/$(src)/gator-driver/),)
