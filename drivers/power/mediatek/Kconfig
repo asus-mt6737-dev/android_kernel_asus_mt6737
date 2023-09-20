@@ -47,6 +47,16 @@ config MTK_BQ24160_SUPPORT
 	  and config MTK_SWCHR_SUPPORT
 	  Set to Yes if BQ24160 is used.
 	default n
+#add by qiangang@wind-mobi.com 20161020	start
+config WIND_DEF_PRO_E281L
+	bool "WIND_DEF_PRO_E281L"
+	help
+	  This is to enable MediaTek supports to ncp1854.
+	  It depends on config MTK_SMART_BATTERY
+	  and config MTK_SWCHR_SUPPORT
+	  Set to Yes if ncp1854 is used.
+	default n
+#add by qiangang@wind-mobi.com 20161020	end
 
 config MTK_BQ24196_SUPPORT
 	bool "MediaTek Battery driver for TI BQ24196"
@@ -329,3 +339,12 @@ config MTK_BIF_SUPPORT
 	  smart battery.
 	  Set No to disable BIF feature of a
 	  smart battery.
+	  
+#qiangang@wind-mobi.com 20170104 begin		
+config WIND_BATTERY_MODIFY
+	bool "Define this macro for charging management"
+	default n
+	help
+		Say Y here to use wind code.
+#qiangang@wind-mobi.com 20170104 end
+

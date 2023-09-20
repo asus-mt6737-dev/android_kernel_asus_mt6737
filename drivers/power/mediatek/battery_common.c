@@ -109,6 +109,13 @@
 #if defined(CONFIG_MTK_PUMP_EXPRESS_PLUS_SUPPORT)
 #include <mach/mt_pe.h>
 #endif
+//qiangang@wind-mobi.com 20170212 begin
+#ifdef CONFIG_WIND_DEVICE_INFO
+//#include <wind_device_info.h>
+#include <../../wind_device_info/wind_device_info.h>
+extern wind_device_info_t wind_device_info;
+#endif
+//qiangang@wind-mobi.com 20170212 end
 /* ////////////////////////////////////////////////////////////////////////////// */
 /* Battery Logging Entry */
 /* ////////////////////////////////////////////////////////////////////////////// */
@@ -118,6 +125,12 @@ int Enable_BATDRV_LOG = BAT_LOG_CRTI;
 /* // Smart Battery Structure */
 /* ///////////////////////////////////////////////////////////////////////////////////////// */
 PMU_ChargerStruct BMT_status;
+#ifdef CONFIG_WIND_ASUS_BATTERY_LIFE_SUPPORT
+//liqiang@wind-mobi.com begin 
+BAT_LIFE_Struct BATLIFE_status;
+//liqiang@wind-mobi.com end 
+#endif
+
 #if defined(CONFIG_MTK_DUAL_INPUT_CHARGER_SUPPORT)
 DISO_ChargerStruct DISO_data;
 /* Debug Msg */
@@ -155,11 +168,24 @@ int g_battery_tt_check_flag = 0;
 
 struct wake_lock battery_suspend_lock;
 struct wake_lock battery_fg_lock;
-CHARGING_CONTROL battery_charging_control;
+CHARGING_CONTROL battery_charging_control = chr_control_interface;//qiangang@wind-mobi.com 20161018
 unsigned int g_BatteryNotifyCode = 0x0000;
 unsigned int g_BN_TestMode = 0x0000;
 kal_bool g_bat_init_flag = 0;
 unsigned int g_call_state = CALL_IDLE;
+//modified by qiangang 20161019 begin
+#define AGING_POWER_TEST
+#if defined(AGING_POWER_TEST)
+unsigned int g_charger_state = 2; /*0 1 2*/
+unsigned int g_charger_demoapp_state = 0;
+int demoapp_flag = 0;
+#endif
+//lvwenkang@wind-mobi.com add  20170331 begin
+#ifdef	CONFIG_WIND_ASUS_OTG_POWER_SUPPLY_UPDATA
+struct work_struct  usb_otg_check;
+#endif
+//lvwenkang@wind-mobi.com add  20170331 end
+//modified by qiangang 20161019 end
 kal_bool g_charging_full_reset_bat_meter = KAL_FALSE;
 int g_platform_boot_mode = 0;
 struct timespec g_bat_time_before_sleep;
@@ -281,6 +307,12 @@ struct ac_data {
 struct usb_data {
 	struct power_supply psy;
 	int USB_ONLINE;
+	//lvwenkang@wind-mobi.com add  20170331 b--
+	#ifdef	CONFIG_WIND_ASUS_OTG_POWER_SUPPLY_UPDATA
+	
+	int USB_OTG;
+	#endif
+	//lvwenkang@wind-mobi.com add  20170331 e--
 };
 
 struct battery_data {
@@ -306,6 +338,11 @@ struct battery_data {
 	int capacity_smb;
 	int present_smb;
 	int adjust_power;
+//liqiang@wind-mobi.com 20170321 begin 
+#ifdef CONFIG_WIND_ASUS_BATTERY_LIFE_SUPPORT
+	int batlife_tbl;
+#endif
+//liqiang@wind-mobi.com 20170321 end 
 };
 
 static enum power_supply_property wireless_props[] = {
@@ -318,6 +355,12 @@ static enum power_supply_property ac_props[] = {
 
 static enum power_supply_property usb_props[] = {
 	POWER_SUPPLY_PROP_ONLINE,
+	//lvwenkang@wind-mobi.com add  20170331  b--
+#ifdef	CONFIG_WIND_ASUS_OTG_POWER_SUPPLY_UPDATA
+	POWER_SUPPLY_PROP_USB_OTG,
+#endif
+//lvwenkang@wind-mobi.com add  20170331  e--
+		
 };
 
 static enum power_supply_property battery_props[] = {
@@ -343,6 +386,10 @@ static enum power_supply_property battery_props[] = {
 	POWER_SUPPLY_PROP_present_smb,
 	/* ADB CMD Discharging */
 	POWER_SUPPLY_PROP_adjust_power,
+#ifdef CONFIG_WIND_ASUS_BATTERY_LIFE_SUPPORT
+	POWER_SUPPLY_PROP_batlife_tbl,
+#endif
+
 };
 
 /*void check_battery_exist(void);*/
@@ -593,6 +640,15 @@ static int usb_get_property(struct power_supply *psy,
 		val->intval = data->USB_ONLINE;
 #endif
 		break;
+
+//lvwenkang@wind-mobi.com add  20170331 b--
+#ifdef	CONFIG_WIND_ASUS_OTG_POWER_SUPPLY_UPDATA
+	case POWER_SUPPLY_PROP_USB_OTG:
+		val->intval = data->USB_OTG;
+		break;
+#endif
+//lvwenkang@wind-mobi.com add  20170331 e--
+
 	default:
 		ret = -EINVAL;
 		break;
@@ -662,7 +718,15 @@ static int battery_get_property(struct power_supply *psy,
 	case POWER_SUPPLY_PROP_adjust_power:
 		val->intval = data->adjust_power;
 		break;
-
+//liqiang@wind-mobi.com 20170321 begin 		
+	#ifdef CONFIG_WIND_ASUS_BATTERY_LIFE_SUPPORT
+	
+	case POWER_SUPPLY_PROP_batlife_tbl:
+		val->intval = data->batlife_tbl;
+		break;
+		
+	#endif
+//liqiang@wind-mobi.com 20170321 end	
 	default:
 		ret = -EINVAL;
 		break;
@@ -705,6 +769,11 @@ static struct usb_data usb_main = {
 		.get_property = usb_get_property,
 		},
 	.USB_ONLINE = 0,
+	//lvwenkang@wind-mobi.com add  20170331 b--
+	#ifdef	CONFIG_WIND_ASUS_OTG_POWER_SUPPLY_UPDATA
+	.USB_OTG = 0,
+	#endif
+	//lvwenkang@wind-mobi.com add  20170331 e--
 };
 
 /* battery_data initialization */
@@ -1588,7 +1657,173 @@ static ssize_t store_V_0Percent_Tracking(struct device *dev, struct device_attri
 
 static DEVICE_ATTR(V_0Percent_Tracking, 0664, show_V_0Percent_Tracking, store_V_0Percent_Tracking);
 
+//modified by qiangang 20161018 begin
+#if defined(AGING_POWER_TEST)
+/*********************************************************AGING_POWER_TEST_START****************************************************************/
+#define AGING_POWER_TEST_PROC_FOLDER "aging_power_test"
+#define AGING_POWER_TEST_PROC_CHARGING_CHARGESTATE "Charging_ChargeState"
+#define AGING_POWER_TEST_PROC_CHARGING_DEMOAPP_CHARGESTATE "Charging_DemoApp_ChargeState"
+static struct proc_dir_entry *aging_power_test_proc_dir = NULL;
+static struct proc_dir_entry *proc_Charging_ChargeState_file = NULL;
+static struct proc_dir_entry *proc_Charging_DemoApp_ChargeState_file = NULL;
 
+
+static ssize_t Charging_ChargeState_read(struct file *file, char *buf, size_t len, loff_t *pos)
+{
+	char *ptr = buf;
+	if (*pos) {
+		return 0;
+	}
+	
+	battery_log(BAT_LOG_CRTI, "g_charger_state = %d\n", g_charger_state);
+	ptr += sprintf(ptr,"%u\n", g_charger_state);
+	*pos += ptr - buf;
+	return (ptr -buf);
+}
+static ssize_t Charging_ChargeState_write(struct file *file, const char *buff, size_t len, loff_t *pos)
+{
+   unsigned int temp = 0; 
+   sscanf(buff, "%u", &temp);
+   if(temp == 0 || temp == 1 || temp == 2)
+   	 g_charger_state = temp;
+   
+	battery_log(BAT_LOG_CRTI, "g_charger_state = %d\n", g_charger_state);
+	return len;
+}
+static struct file_operations proc_Charging_ChargeState_file_ops =
+{
+	.owner = THIS_MODULE,
+	.read = Charging_ChargeState_read,
+	.write = Charging_ChargeState_write,
+};
+
+
+
+static ssize_t Charging_DemoApp_ChargeState_read(struct file *file, char *buf, size_t len, loff_t *pos)
+{
+	char *ptr = buf;
+	if (*pos) {
+		return 0;
+	}
+	battery_log(BAT_LOG_CRTI, "g_charger_demoapp_state = %d\n", g_charger_demoapp_state);
+	ptr += sprintf(ptr,"%u\n", g_charger_demoapp_state);
+	*pos += ptr - buf;
+	return (ptr -buf);
+}
+static ssize_t Charging_DemoApp_ChargeState_write(struct file *file, const char *buff, size_t len, loff_t *pos)
+{
+   unsigned int temp = 0; 
+   sscanf(buff, "%u", &temp);
+   if(temp == 0 || temp == 1)
+   g_charger_demoapp_state = temp;
+   
+	battery_log(BAT_LOG_CRTI, "g_charger_demoapp_state = %d\n", g_charger_demoapp_state);
+	return len;
+}
+static struct file_operations proc_Charging_DemoApp_ChargeState_file_ops =
+{
+	.owner = THIS_MODULE,
+	.read = Charging_DemoApp_ChargeState_read,
+	.write = Charging_DemoApp_ChargeState_write,
+};
+
+
+static int aging_power_test_proc_init(void)
+{
+	aging_power_test_proc_dir = proc_mkdir(AGING_POWER_TEST_PROC_FOLDER, NULL);
+	if (aging_power_test_proc_dir == NULL)
+	{
+		printk(" %s: aging_power_test_proc_dir file create failed!\n", __func__);
+		return -ENOMEM;
+	}
+
+	proc_Charging_ChargeState_file = proc_create(AGING_POWER_TEST_PROC_CHARGING_CHARGESTATE, (S_IWUSR|S_IRUGO|S_IWUGO), 
+		aging_power_test_proc_dir, &proc_Charging_ChargeState_file_ops);
+	if(proc_Charging_ChargeState_file == NULL)
+	{
+		printk(" %s: proc_Charging_ChargeState_file file create failed!\n", __func__);
+		remove_proc_entry( AGING_POWER_TEST_PROC_CHARGING_CHARGESTATE, aging_power_test_proc_dir );
+		return -ENOMEM;
+	}
+
+	proc_Charging_DemoApp_ChargeState_file = proc_create(AGING_POWER_TEST_PROC_CHARGING_DEMOAPP_CHARGESTATE, (S_IWUSR|S_IRUGO|S_IWUGO), 
+		aging_power_test_proc_dir, &proc_Charging_DemoApp_ChargeState_file_ops);
+	if(proc_Charging_DemoApp_ChargeState_file == NULL)
+	{
+		printk(" %s: proc_Charging_DemoApp_ChargeState_file create failed!\n", __func__);
+		remove_proc_entry( AGING_POWER_TEST_PROC_CHARGING_DEMOAPP_CHARGESTATE, aging_power_test_proc_dir );
+		return -ENOMEM;
+	}
+
+	return 0 ;
+}
+/*
+static void aging_power_test_proc_deinit(void)
+{
+	remove_proc_entry( AGING_POWER_TEST_PROC_CHARGING_CHARGESTATE, aging_power_test_proc_dir );
+	remove_proc_entry( AGING_POWER_TEST_PROC_CHARGING_DEMOAPP_CHARGESTATE, aging_power_test_proc_dir );
+}*/
+/*********************************************************AGING_POWER_TEST_END****************************************************************/
+#endif
+//modified by qiangang 20161018 end
+
+//liqiang@wind-mobi.com begin 
+#ifdef CONFIG_WIND_ASUS_BATTERY_LIFE_SUPPORT
+static ssize_t show_Charging_batterylife(struct device *dev, struct device_attribute *attr, char *buf)
+{
+	battery_log(BAT_LOG_CRTI, "g_charger_demoapp_state = %d\n", g_charger_demoapp_state);
+	return sprintf(buf, "bm = %d, b2n = %d, n2b = %d \n", BATLIFE_status.Batlife_mode, BATLIFE_status.Batlife2Normal, BATLIFE_status.Normal2Batlife);
+}
+
+static ssize_t store_Charging_batterylife(struct device *dev, struct device_attribute *attr,
+					const char *buf, size_t size)
+{
+   unsigned int temp = 0; 
+   sscanf(buf, "%u", &temp);
+   battery_log(BAT_LOG_CRTI, "wind-log bm temp = %d\n", temp);
+ 	battery_log(BAT_LOG_CRTI, "wind-log before bm = %d Batlife2Normal = %d Normal2Batlife = %d \n", BATLIFE_status.Batlife_mode, BATLIFE_status.Batlife2Normal,  BATLIFE_status.Normal2Batlife);
+	if(temp == BATTERY_NORMAL_MODE){
+		
+		if(BATLIFE_status.Batlife_mode == BATTERY_LIFE_MODE){
+			
+			BATLIFE_status.Batlife_mode = BATTERY_NORMAL_MODE;
+			//BATLIFE_status.Batlife2Normal = 0;
+			//BATLIFE_status.Normal2Batlife = 0;	
+		}
+		
+		if(BATLIFE_status.Batlife_mode == BATTERY_INIT_MODE){  //when we lost rtc val 
+			BATLIFE_status.Batlife_mode = BATTERY_NORMAL_MODE;
+			BATLIFE_status.Batlife2Normal = 1;
+		    BATLIFE_status.Normal2Batlife = 0;		
+		}
+
+		
+		
+	} else if(temp == BATTERY_LIFE_MODE){  
+	
+		if((BATLIFE_status.Batlife_mode == BATTERY_NORMAL_MODE)  ){ 
+			BATLIFE_status.Batlife_mode = BATTERY_LIFE_MODE;
+			//BATLIFE_status.Batlife2Normal = 0;
+			//BATLIFE_status.Normal2Batlife = 0;
+
+		}
+
+		if(BATLIFE_status.Batlife_mode == BATTERY_INIT_MODE){  //when we lost rtc val
+			BATLIFE_status.Batlife_mode = BATTERY_LIFE_MODE;
+			BATLIFE_status.Batlife2Normal = 1;
+		    BATLIFE_status.Normal2Batlife = 0;		
+		}
+			
+	} 
+   	set_rtc_spare_batlife_value(&BATLIFE_status); // save status to rtc memory
+	battery_log(BAT_LOG_CRTI, "wind-log after bm = %d Batlife2Normal = %d Normal2Batlife = %d \n", BATLIFE_status.Batlife_mode, BATLIFE_status.Batlife2Normal,  BATLIFE_status.Normal2Batlife);
+	return size;
+}
+
+static DEVICE_ATTR(Charging_batterylife, 0664, show_Charging_batterylife, store_Charging_batterylife);
+
+#endif
+//liqiang@wind-mobi.com end
 static ssize_t show_Charger_Type(struct device *dev, struct device_attribute *attr, char *buf)
 {
 	unsigned int chr_ype = CHARGER_UNKNOWN;
@@ -1673,7 +1908,21 @@ static DEVICE_ATTR(Pump_Express, 0664, show_Pump_Express, store_Pump_Express);
 
 static void mt_battery_update_EM(struct battery_data *bat_data)
 {
+
+	//liqiang@wind-mobi.com 20170310 begin
+#ifdef CONFIG_WIND_ASUS_BATTERY_LIFE_SUPPORT
+	bat_data->batlife_tbl = BATLIFE_status.Normal2Batlife;
+	if(BATLIFE_status.Normal2Batlife == 1 && BMT_status.UI_SOC >= 40){
+		bat_data->BAT_CAPACITY = BMT_status.UI_SOC_BATLIFE;
+	}
+	else{
+		bat_data->BAT_CAPACITY = BMT_status.UI_SOC;	
+	}
+#else
 	bat_data->BAT_CAPACITY = BMT_status.UI_SOC;
+#endif
+	//liqiang@wind-mobi.com 20170310 end
+	
 	bat_data->BAT_TemperatureR = BMT_status.temperatureR;	/* API */
 	bat_data->BAT_TempBattVoltage = BMT_status.temperatureV;	/* API */
 	bat_data->BAT_InstatVolt = BMT_status.bat_vol;	/* VBAT */
@@ -1687,9 +1936,21 @@ static void mt_battery_update_EM(struct battery_data *bat_data)
 	bat_data->present_smb = g_present_smb;
 	battery_log(BAT_LOG_FULL, "status_smb = %d, capacity_smb = %d, present_smb = %d\n",
 		    bat_data->status_smb, bat_data->capacity_smb, bat_data->present_smb);
+//liqiang@wind-mobi.com 20170321 begin 	
+#ifdef CONFIG_WIND_ASUS_BATTERY_LIFE_SUPPORT
+	if ((BMT_status.UI_SOC_BATLIFE == 100) && (BMT_status.charger_exist == KAL_TRUE) && (BATLIFE_status.Normal2Batlife == 1))
+	{
+		bat_data->BAT_STATUS = POWER_SUPPLY_STATUS_FULL;	
+	}
+	else if((BMT_status.UI_SOC == 100) && (BMT_status.charger_exist == KAL_TRUE)){
+			bat_data->BAT_STATUS = POWER_SUPPLY_STATUS_FULL;	
+	}
+#else			
 	if ((BMT_status.UI_SOC == 100) && (BMT_status.charger_exist == KAL_TRUE)
 	    && (BMT_status.bat_charging_state != CHR_ERROR))
 		bat_data->BAT_STATUS = POWER_SUPPLY_STATUS_FULL;
+#endif
+//liqiang@wind-mobi.com 20170321 end 
 
 #ifdef CONFIG_MTK_DISABLE_POWER_ON_OFF_VOLTAGE_LIMITATION
 	if (bat_data->BAT_CAPACITY <= 0)
@@ -1837,11 +2098,22 @@ static kal_bool mt_battery_nPercent_tracking_check(void)
 static kal_bool mt_battery_0Percent_tracking_check(void)
 {
 	kal_bool resetBatteryMeter = KAL_TRUE;
-
+    static int counter = 0;		// added by qiangang@wind-mobi.com 20170418 
 	if (BMT_status.UI_SOC <= 0) {
 		BMT_status.UI_SOC = 0;
 	} else {
-		if (BMT_status.bat_vol > SYSTEM_OFF_VOLTAGE && BMT_status.UI_SOC > 1)
+// added by qiangang@wind-mobi.com 20170418 b--
+		if(BMT_status.bat_vol > SYSTEM_OFF_VOLTAGE && BMT_status.UI_SOC > 1 && BMT_status.UI_SOC < 5)
+		{
+			counter++;
+			if(counter > 7){
+				BMT_status.UI_SOC--;
+				counter = 0;
+			}
+		}
+
+		else if (BMT_status.bat_vol > SYSTEM_OFF_VOLTAGE && BMT_status.UI_SOC > 1)
+// added by qiangang@wind-mobi.com 20170418 e--
 			BMT_status.UI_SOC--;
 		else if (BMT_status.bat_vol <= SYSTEM_OFF_VOLTAGE)
 			BMT_status.UI_SOC--;
@@ -1959,7 +2231,42 @@ static void battery_update(struct battery_data *bat_data)
 	else
 		set_rtc_spare_fg_value(BMT_status.UI_SOC);
 
+	
+//liqiang@wind-mobi.com 20170310 begin
+#ifdef CONFIG_WIND_ASUS_BATTERY_LIFE_SUPPORT
+if(BMT_status.UI_SOC < 40){
+	
+	if( BATLIFE_status.Batlife_mode == BATTERY_NORMAL_MODE){
+		BATLIFE_status.Normal2Batlife = 0;
+		BATLIFE_status.Batlife2Normal = 1;
+	}else if(BATLIFE_status.Batlife_mode == BATTERY_LIFE_MODE){
+		BATLIFE_status.Normal2Batlife = 1;
+		BATLIFE_status.Batlife2Normal = 0;	
+	}
+	
+	set_rtc_spare_batlife_value(&BATLIFE_status); // save status to rtc memory
+	
+}
 
+
+if((BATLIFE_status.Normal2Batlife == 1) && (BMT_status.UI_SOC >= 40) )
+{
+	BMT_status.UI_SOC_BATLIFE = 40 + (BMT_status.UI_SOC-40)*60/40;
+	if(BMT_status.UI_SOC_BATLIFE >= 100){
+			BMT_status.UI_SOC_BATLIFE = 100;
+
+		}
+}
+
+printk("wind-log:battery_update Batlife_mode = %d, Batlife2Normal = %d, Normal2Batlife=%d\n ", BATLIFE_status.Batlife_mode,
+	BATLIFE_status.Batlife2Normal, BATLIFE_status.Normal2Batlife);
+printk("wind-log:battery_update UI_SOC_BATLIFE = %d, UI_SOC = %d, SOC=%d\n ",BMT_status.UI_SOC_BATLIFE,
+	BMT_status.UI_SOC, BMT_status.SOC);	
+
+
+//BATLIFE_status.Batlife2Normal == 1 do nothing
+#endif
+//liqiang@wind-mobi.com 20170310 end
 	mt_battery_update_EM(bat_data);
 
 	if (cmd_discharging == 1)
@@ -2090,7 +2397,11 @@ static void ac_update(struct ac_data *ac_data)
 		power_supply_changed(ac_psy);
 	}
 }
-
+//lvwenkang@wind-mobi.com add  20170331 b--
+#ifdef	CONFIG_WIND_ASUS_OTG_POWER_SUPPLY_UPDATA
+extern unsigned int g_otg_host_state;
+#endif
+//lvwenkang@wind-mobi.com add  20170331 e--
 static void usb_update(struct usb_data *usb_data)
 {
 	static int usb_status = -1;
@@ -2110,12 +2421,36 @@ static void usb_update(struct usb_data *usb_data)
 
 	if (usb_status != usb_data->USB_ONLINE) {
 		usb_status = usb_data->USB_ONLINE;
-		power_supply_changed(usb_psy);
+
+			power_supply_changed(usb_psy);
 	}
+		//lvwenkang@wind-mobi.com add  20170331 b--
+#ifdef	CONFIG_WIND_ASUS_OTG_POWER_SUPPLY_UPDATA
+
+	if(g_otg_host_state == 1)
+	{
+		usb_data->USB_OTG = 1;
+
+	}else{
+		
+		usb_data->USB_OTG = 0;
+	}
+	power_supply_changed(usb_psy);
+#endif
+	//lvwenkang@wind-mobi.com add  20170331  e--
 }
 
 #endif
+//lvwenkang@wind-mobi.com add  20170331 b--
+#ifdef	CONFIG_WIND_ASUS_OTG_POWER_SUPPLY_UPDATA
+ static void  otg_updata(struct work_struct *data)
+{
+	 usb_update(&usb_main);
 
+}
+
+#endif
+//lvwenkang@wind-mobi.com add  20170331 e--
 /* ///////////////////////////////////////////////////////////////////////////////////////// */
 /* // Battery Temprature Parameters and functions */
 /* ///////////////////////////////////////////////////////////////////////////////////////// */
@@ -2209,6 +2544,60 @@ PMU_STATUS do_batt_temp_state_machine(void)
 		}
 	}
 
+//qiangang@wind-mobi.com 20161020 begin
+#ifdef CONFIG_WIND_ASUS_DEMAND_SUPPORT
+if (BMT_status.temperature >= batt_cust_data.max_charge_temperature) {
+		battery_log(BAT_LOG_CRTI, "[BATTERY] Battery Over Temperature !!\n\r");
+		g_batt_temp_status = TEMP_POS_HIGH;
+		return PMU_STATUS_FAIL;
+	} else if (g_batt_temp_status == TEMP_POS_HIGH) {
+		if (BMT_status.temperature < batt_cust_data.max_charge_temperature_minus_x_degree) {
+			battery_log(BAT_LOG_CRTI,
+						"[BATTERY] Battery Temperature down from %d to %d(%d), allow charging!!\n\r",
+						batt_cust_data.max_charge_temperature, BMT_status.temperature,
+						batt_cust_data.max_charge_temperature_minus_x_degree);
+			g_batt_temp_status = TEMP_POS_NORMAL;
+			BMT_status.bat_charging_state = CHR_PRE;
+			return PMU_STATUS_OK;
+		} else {
+			return PMU_STATUS_FAIL;
+		}
+	} else if (BMT_status.temperature >= 45) {
+	battery_log(BAT_LOG_CRTI, "[BATTERY] ASUS Battery Over 45!!\n\r");
+	if (BMT_status.bat_vol >= 4100){
+		battery_log(BAT_LOG_CRTI, "[BATTERY] ASUS Battery Over 4.1V, Stop Charging ,(%d)!!\n\r", g_batt_temp_status);
+		g_batt_temp_status = TEMP_POS_HIGH_VOL;
+		return PMU_STATUS_FAIL;
+	} else if (g_batt_temp_status == TEMP_POS_HIGH_VOL){
+		if(BMT_status.bat_vol <= 4000){
+			battery_log(BAT_LOG_CRTI, "[BATTERY] ASUS Battery below 4V, Allow Charging,(%d)!!\n\r", g_batt_temp_status);
+			g_batt_temp_status = TEMP_POS_NORMAL;
+			BMT_status.bat_charging_state = CHR_PRE;
+			return PMU_STATUS_OK;
+		} else {
+			battery_log(BAT_LOG_CRTI, "[BATTERY] ASUS Battery below 4V, ####else### ,(%d)\n\r", g_batt_temp_status);
+			return PMU_STATUS_FAIL;
+		}
+	} else {
+		battery_log(BAT_LOG_CRTI, "[BATTERY] [BATTERY] ASUS Battery Over 45!!###else### ,(%d)\n\r", g_batt_temp_status);
+		g_batt_temp_status = TEMP_POS_NORMAL;
+	}
+} else if (g_batt_temp_status == TEMP_POS_HIGH_VOL) {
+	if (BMT_status.temperature <= 43) {
+		battery_log(BAT_LOG_CRTI, "[BATTERY] ASUS Battery Temperature down from 45 to 43, allow charging!!,(%d)\n\r", g_batt_temp_status);
+		g_batt_temp_status = TEMP_POS_NORMAL;
+		BMT_status.bat_charging_state = CHR_PRE;
+		return PMU_STATUS_OK;
+	} else {
+		battery_log(BAT_LOG_CRTI, "[BATTERY] ASUS Battery Temperature down from 45 to 43, ###else###!!,(%d)\n\r", g_batt_temp_status);
+		return PMU_STATUS_FAIL;
+	}
+} else {
+	battery_log(BAT_LOG_CRTI, "[BATTERY] [BATTERY]g_batt_temp_status = (%d)\n\r", g_batt_temp_status);
+	g_batt_temp_status = TEMP_POS_NORMAL;
+}
+
+#else
 	if (BMT_status.temperature >= batt_cust_data.max_charge_temperature) {
 		battery_log(BAT_LOG_CRTI, "[BATTERY] Battery Over Temperature !!\n\r");
 		g_batt_temp_status = TEMP_POS_HIGH;
@@ -2228,6 +2617,9 @@ PMU_STATUS do_batt_temp_state_machine(void)
 	} else {
 		g_batt_temp_status = TEMP_POS_NORMAL;
 	}
+#endif
+//qiangang@wind-mobi.com 20161020 end
+
 	return PMU_STATUS_OK;
 }
 
@@ -2439,17 +2831,16 @@ void mt_battery_GetBatteryData(void)
 	if (g_battery_soc_ready == KAL_FALSE)
 		g_battery_soc_ready = KAL_TRUE;
 
-	battery_log(BAT_LOG_CRTI,
-	"AvgVbat=(%d,%d),AvgI=(%d,%d),VChr=%d,AvgT=(%d,%d),SOC=(%d,%d),UI_SOC=%d,ZCV=%d,CHR_Type=%d bcct:%d:%d I:%d Ibat:%d\n",
+	printk("AvgVbat=(%d,%d),AvgI=(%d,%d),VChr=%d,AvgT=(%d,%d),SOC=(%d,%d),UI_SOC=%d,ZCV=%d,CHR_Type=%d bcct:%d:%d I:%d Ibat:%d\n",
 		    BMT_status.bat_vol, bat_vol, BMT_status.ICharging, ICharging,
 		    BMT_status.charger_vol, BMT_status.temperature, temperature,
 		    previous_SOC, BMT_status.SOC, BMT_status.UI_SOC, BMT_status.ZCV,
 		    BMT_status.charger_type, g_bcct_flag, get_usb_current_unlimited(),
-		    get_bat_charging_current_level(), BMT_status.IBattery / 10);
-	battery_log(BAT_LOG_CRTI, "v=%d,i=%d,t=%d,soc=%d,bcct:%d:%d I:%d Ibat:%d\n",
+		    get_bat_charging_current_level(), BMT_status.IBattery / 10); //modify by qiangang 20170504
+	printk("v=%d,i=%d,t=%d,soc=%d,bcct:%d:%d I:%d Ibat:%d\n",
 		    bat_vol, ICharging, temperature, BMT_status.UI_SOC, g_bcct_flag,
 		    get_usb_current_unlimited(), get_bat_charging_current_level(),
-		    BMT_status.IBattery / 10);
+		    BMT_status.IBattery / 10);  //modify by qiangang 20170504
 
 }
 
@@ -2509,6 +2900,11 @@ static PMU_STATUS mt_battery_CheckChargerVoltage(void)
 		if (batt_cust_data.v_charger_enable) {
 			if (BMT_status.charger_vol <= batt_cust_data.v_charger_min) {
 				battery_log(BAT_LOG_CRTI, "[BATTERY]Charger under voltage!!\r\n");
+				//qiangang@wind-mobi.com 20170104 begin			
+				#ifdef CONFIG_WIND_BATTERY_MODIFY
+				BMT_status.charger_protect_status = charger_UNDER_VOL;			
+				#endif			
+				//qiangang@wind-mobi.com 20170104 end
 				BMT_status.bat_charging_state = CHR_ERROR;
 				status = PMU_STATUS_FAIL;
 			}
@@ -2596,7 +2992,61 @@ static void mt_battery_CheckBatteryStatus(void)
 		return;
 	}
 #endif
+//modified by qiangang 20161019 begin
+#if defined(AGING_POWER_TEST)
+	battery_log(BAT_LOG_CRTI,
+		    "BMT_status.bat_charging_state = %d\n", g_charger_state);
+	if(g_charger_state == 0){
+		BMT_status.bat_charging_state = CHR_ERROR;
+				battery_log(BAT_LOG_CRTI,
+				    "BMT_status.bat_charging_state Stop\n");
+	}else if(g_charger_state == 1){
+		g_charger_state = 2;
+		BMT_status.bat_charging_state  = CHR_PRE;
+				battery_log(BAT_LOG_CRTI,
+				    "BMT_status.bat_charging_state START\n");
+	}
+//add by qiangang@wind-mobi.com 20170106 begin	
+	 if(g_charger_demoapp_state == 1){ //this for demo app
+	 
+		if(BMT_status.UI_SOC > 60 ){
+			BMT_status.bat_charging_state = CHR_ERROR;
+			demoapp_flag = 1;
+				battery_log(BAT_LOG_CRTI,
+				    "BMT_status.bat_charging_state BMT_status.UI_SOC = %d Stop\n", BMT_status.UI_SOC);	
+printk("qiangang1 BMT_status.bat_charging_state BMT_status.UI_SOC = %d Stop\n", BMT_status.UI_SOC);					
+					
+					
+						
+		}else if(BMT_status.UI_SOC < 55 && demoapp_flag == 1){
+			demoapp_flag = 0;
+			BMT_status.bat_charging_state = CHR_PRE;
+			battery_log(BAT_LOG_CRTI,
+				    "BMT_status.bat_charging_state BMT_status.UI_SOC = %d start\n", BMT_status.UI_SOC);	
+		}else if((BMT_status.UI_SOC >= 55) && (demoapp_flag == 1) && (BMT_status.UI_SOC <= 60)){
+			BMT_status.bat_charging_state = CHR_ERROR;
+			battery_log(BAT_LOG_CRTI,
+				"BMT_status.bat_charging_state BMT_status.UI_SOC = %d Stop\n", BMT_status.UI_SOC);
+printk("qiangang2 BMT_status.bat_charging_state BMT_status.UI_SOC = %d Stop\n", BMT_status.UI_SOC);			
 
+		}else if((BMT_status.UI_SOC >= 55) && (demoapp_flag == 0) && (BMT_status.UI_SOC <= 60)){
+		  // do nothing
+		}
+		
+		
+	}else{
+			if(demoapp_flag ==1){
+				demoapp_flag = 0;
+				BMT_status.bat_charging_state = CHR_PRE;
+				battery_log(BAT_LOG_CRTI,
+						"BMT_status.bat_charging_state demoapp_flag BMT_status.UI_SOC = %d start\n", BMT_status.UI_SOC); 
+printk("qiangang3 BMT_status.bat_charging_state BMT_status.UI_SOC = %d Stop\n", BMT_status.UI_SOC);						
+
+			}
+	}
+//add by qiangang@wind-mobi.com 20170106 end	
+#endif
+	//modified by qiangang 20161019 end
 	if (mt_battery_CheckChargingTime() != PMU_STATUS_OK) {
 		BMT_status.bat_charging_state = CHR_ERROR;
 		return;
@@ -2662,13 +3112,16 @@ static void mt_battery_notify_ICharging_check(void)
 
 #endif
 }
-
+//added by qiangang@wind-mobi.com 20170105 b--
+static int temperature_num_1 = 0;
+static int temp_over_first_time_1 = 0;
+//added by qiangang@wind-mobi.com 20170105 e--
 
 static void mt_battery_notify_VBatTemp_check(void)
 {
 #if defined(BATTERY_NOTIFY_CASE_0002_VBATTEMP)
 
-	if (BMT_status.temperature >= batt_cust_data.max_charge_temperature) {
+	if (BMT_status.temperature >= batt_cust_data.max_charge_temperature && BMT_status.temperature <= 57) {
 		g_BatteryNotifyCode |= 0x0002;
 		battery_log(BAT_LOG_CRTI, "[BATTERY] bat_temp(%d) out of range(too high)\n",
 			    BMT_status.temperature);
@@ -2680,13 +3133,43 @@ static void mt_battery_notify_VBatTemp_check(void)
 			    BMT_status.temperature);
 	}
 #else
-#ifdef BAT_LOW_TEMP_PROTECT_ENABLE
-	else if (BMT_status.temperature < MIN_CHARGE_TEMPERATURE) {
-		g_BatteryNotifyCode |= 0x0020;
-		battery_log(BAT_LOG_CRTI, "[BATTERY] bat_temp(%d) out of range(too low)\n",
-			    BMT_status.temperature);
+
+//qiangang@wind-mobi.com 20170105 begin
+#if defined(BATTERY_DTS_SUPPORT) && defined(CONFIG_OF) 
+	else if (batt_cust_data.bat_low_temp_protect_enable && 
+			 BMT_status.temperature < batt_cust_data.min_charge_temperature) {
+	  g_BatteryNotifyCode |= 0x0020;
+	  battery_log(BAT_LOG_CRTI, "[BATTERY] bat_temp(%d) out of range(too low)\n",
+	  BMT_status.temperature);
 	}
 #endif
+// qiangang@wind-mobi 20170105 end
+// qiangang@wind-mobi 20161018 begin
+//added by qiangang@wind-mobi.com 20170105 b--
+		if(BMT_status.temperature > 57 && BMT_status.temperature <= 60) 
+			{		
+				temperature_num_1++;		
+				if ((temperature_num_1>=18)||(temp_over_first_time_1==0))		
+				{			
+					g_BatteryNotifyCode |= 0x0100;			
+					battery_log(BAT_LOG_CRTI, "[BATTERY] bat_temp(%d) out of range(too high), it will poweroff!!!\n", BMT_status.temperature);			 
+					temperature_num_1=0;			
+					temp_over_first_time_1=1;		
+				}	
+			}else{			
+					g_BatteryNotifyCode &= ~(0x0100);			
+					temp_over_first_time_1=0;			
+					temperature_num_1=0;		
+				}
+		//added by qiangang@wind-mobi.com 20170105 e--
+#ifdef BAT_LOW_TEMP_PROTECT_ENABLE  //added by qiangang@wind-mobi.com 20170105 
+else if (BMT_status.temperature < MIN_CHARGE_TEMPERATURE) {
+	g_BatteryNotifyCode |= 0x0020;
+	battery_log(BAT_LOG_CRTI, "[BATTERY] bat_temp(%d) out of range(too low)\n",
+			BMT_status.temperature);
+}
+// qiangang@wind-mobi 20161018 end
+#endif    //added by qiangang@wind-mobi.com 20170105
 #endif
 
 	battery_log(BAT_LOG_FULL, "[BATTERY] BATTERY_NOTIFY_CASE_0002_VBATTEMP (%x)\n",
@@ -4117,7 +4600,10 @@ static int __batt_init_cust_data_from_dt(void)
 
 	__batt_parse_node(np, "usb_charger_current",
 		&batt_cust_data.usb_charger_current);
-
+//add by qiangang@wind-mobi.com 20170502 begin		
+	__batt_parse_node(np, "usb_charger_input_current",
+		&batt_cust_data.usb_charger_input_current);
+//add by qiangang@wind-mobi.com 20170502 end	
 	__batt_parse_node(np, "ac_charger_input_current",
 		&batt_cust_data.ac_charger_input_current);
 
@@ -4126,7 +4612,10 @@ static int __batt_init_cust_data_from_dt(void)
 
 	__batt_parse_node(np, "non_std_ac_charger_current",
 		&batt_cust_data.non_std_ac_charger_current);
-
+//add by qiangang@wind-mobi.com 20170502 begin			
+	__batt_parse_node(np, "non_std_ac_charger_input_current",
+		&batt_cust_data.non_std_ac_charger_input_current);
+//add by qiangang@wind-mobi.com 20170502 end
 	__batt_parse_node(np, "charging_host_charger_current",
 		&batt_cust_data.charging_host_charger_current);
 
@@ -4165,7 +4654,10 @@ static int __batt_init_cust_data_from_dt(void)
 
 	__batt_parse_node(np, "high_battery_voltage_support",
 		&batt_cust_data.high_battery_voltage_support);
-
+// added by qiangang@wind-mobi.com 20170418 b--
+	__batt_parse_node(np, "ASUS_4_4V_battery_voltage_support",
+		&batt_cust_data.ASUS_4_4V_battery_voltage_support);
+// added by qiangang@wind-mobi.com 20170418 e--
 	__batt_parse_node(np, "mtk_jeita_standard_support",
 		&batt_cust_data.mtk_jeita_standard_support);
 
@@ -4331,7 +4823,11 @@ static int battery_probe(struct platform_device *dev)
 		return ret;
 	}
 	battery_log(BAT_LOG_CRTI, "[BAT_probe] power_supply_register Battery Success !!\n");
-
+	//lvwenkang@wind-mobi.com add  20170331	b--
+	#ifdef	CONFIG_WIND_ASUS_OTG_POWER_SUPPLY_UPDATA
+	INIT_WORK(&usb_otg_check, otg_updata);
+	#endif
+	//lvwenkang@wind-mobi.com add  20170331 e--
 #if !defined(CONFIG_POWER_EXT)
 
 #ifdef CONFIG_MTK_POWER_EXT_DETECT
@@ -4396,10 +4892,20 @@ static int battery_probe(struct platform_device *dev)
 		ret_device_file = device_create_file(&(dev->dev), &dev_attr_FG_SW_CoulombCounter);
 		ret_device_file = device_create_file(&(dev->dev), &dev_attr_Charging_CallState);
 		ret_device_file = device_create_file(&(dev->dev), &dev_attr_V_0Percent_Tracking);
-
+	//liqiang@wind-mobi.com 20170311 begin
+		#ifdef CONFIG_WIND_ASUS_BATTERY_LIFE_SUPPORT
+		ret_device_file = device_create_file(&(dev->dev), &dev_attr_Charging_batterylife);	
+		#endif
+	//liqiang@wind-mobi.com 20170311 end
 		ret_device_file = device_create_file(&(dev->dev), &dev_attr_Charger_Type);
 		ret_device_file = device_create_file(&(dev->dev), &dev_attr_Pump_Express);
 	}
+
+	//modified by qiangang@wind-mobi.com 20161215 begin
+	#if defined(AGING_POWER_TEST)
+	aging_power_test_proc_init();
+	#endif
+	//modified by qiangang@wind-mobi.com 20161215 end
 
 	/* battery_meter_initial();      //move to mt_battery_GetBatteryData() to decrease booting time */
 
@@ -4452,6 +4958,16 @@ static int battery_probe(struct platform_device *dev)
 	if ((g_vcdt_irq_delay_flag == KAL_TRUE) || (upmu_is_chr_det() == KAL_TRUE))
 		do_chrdet_int_task();
 #endif
+//qiangang@wind-mobi.com 20170212 begin
+#ifdef CONFIG_WIND_DEVICE_INFO
+	sprintf(wind_device_info.battery_data.BAT_Model_Name, "%s", "C11P1614");
+	sprintf(wind_device_info.battery_data.Battery_type, "%s", "O");
+	wind_device_info.battery_data.g_bat_id = 01;
+	wind_device_info.battery_data.Driver_and_Data_Flash_Version = 1;
+	sprintf(wind_device_info.battery_data.Image_Version, "%s", "14.0.0.1");
+	
+#endif
+//qiangang@wind-mobi.com 20170212 end
 
 	return 0;
 }

@@ -223,6 +223,12 @@ static struct device_attribute power_supply_attrs[] = {
 	POWER_SUPPLY_ATTR(present_smb),
 	/* ADB CMD Discharging */
 	POWER_SUPPLY_ATTR(adjust_power),
+//liqiang@wind-mobi.com 20170321 begin
+#ifdef CONFIG_WIND_ASUS_BATTERY_LIFE_SUPPORT
+	POWER_SUPPLY_ATTR(batlife_tbl),
+#endif
+//liqiang@wind-mobi.com 20170321 end
+
 	/* Properties of type `const char *' */
 	POWER_SUPPLY_ATTR(model_name),
 	POWER_SUPPLY_ATTR(manufacturer),

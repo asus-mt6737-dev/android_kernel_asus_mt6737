@@ -53,6 +53,11 @@
 #include <mach/mt_charging.h>
 #include <mt-plat/mt_boot.h>
 
+//liqiang@wind-mobi.com 20170311 begin 
+#ifdef CONFIG_WIND_ASUS_BATTERY_LIFE_SUPPORT
+extern BAT_LIFE_Struct BATLIFE_status;
+#endif
+//liqiang@wind-mobi.com 20170311 end 
 #include "mtk_pep_intf.h"
 #include "mtk_pep20_intf.h"
 
@@ -464,6 +469,7 @@ unsigned int set_bat_charging_current_limit(int current_limit)
 {
 	CHR_CURRENT_ENUM chr_type_ichg = 0;
 	CHR_CURRENT_ENUM chr_type_aicr = 0;
+	return 0;  //modify by qiangang 20161018
 
 	mutex_lock(&g_ichg_access_mutex);
 	if (current_limit != -1) {
@@ -703,12 +709,12 @@ void select_charging_current(void)
 			}
 #else
 			{
-				g_temp_input_CC_value = batt_cust_data.usb_charger_current;
+				g_temp_input_CC_value = batt_cust_data.usb_charger_input_current;  //modify by qiangang 20170504
 				g_temp_CC_value = batt_cust_data.usb_charger_current;
 			}
 #endif
 		} else if (BMT_status.charger_type == NONSTANDARD_CHARGER) {
-			g_temp_input_CC_value = batt_cust_data.non_std_ac_charger_current;
+			g_temp_input_CC_value = batt_cust_data.non_std_ac_charger_input_current; //modify by qiangang 20170504
 			g_temp_CC_value = batt_cust_data.non_std_ac_charger_current;
 
 		} else if (BMT_status.charger_type == STANDARD_CHARGER) {
@@ -925,6 +931,7 @@ static void mtk_select_cv(void)
 static void pchr_turn_on_charging(void)
 {
 	u32 charging_enable = KAL_TRUE;
+	BATTERY_VOLTAGE_ENUM cv_voltage;
 
 #ifdef CONFIG_MTK_DUAL_INPUT_CHARGER_SUPPORT
 	if (BMT_status.charger_exist)
@@ -959,11 +966,63 @@ static void pchr_turn_on_charging(void)
 			charging_enable = KAL_FALSE;
 			battery_log(BAT_LOG_CRTI,
 				"[BATTERY] charging current is set 0mA, turn off charging !\r\n");
-		} else /* Set CV Voltage */
-			mtk_select_cv();
+		} else {           //qiangang@wind-mobi.com 20170424 begin
+			/* Set CV Voltage */
+		mtk_select_cv();
+		#ifdef CONFIG_WIND_ASUS_DEMAND_SUPPORT
+			if((BMT_status.temperature > 0) && (BMT_status.temperature < 10))
+				{
+							#if (defined CONFIG_WIND_DEF_PRO_E281L) || (defined CONFIG_WIND_DEF_PRO_D281L)
+							g_temp_CC_value = CHARGE_CURRENT_800_00_MA;
+							#else
+							g_temp_CC_value = CHARGE_CURRENT_675_00_MA;//modify by qiangang  668
+							#endif
+							battery_log(BAT_LOG_CRTI,"0--10 set ac_charger_current = %d\n",g_temp_CC_value);
+				}
+	#endif
+
+			battery_charging_control(CHARGING_CMD_SET_INPUT_CURRENT,
+						 &g_temp_input_CC_value);
+	//qiangang@wind-mobi.com 20170424 end
+							battery_charging_control(CHARGING_CMD_SET_CURRENT,&g_temp_CC_value);
+//qiangang@wind-mobi.com 20170424 begin							
+#if !defined(CONFIG_MTK_JEITA_STANDARD_SUPPORT)
+
+			if (batt_cust_data.high_battery_voltage_support) {
+				cv_voltage = BATTERY_VOLT_04_340000_V;
+				if(batt_cust_data.ASUS_4_4V_battery_voltage_support) {
+					cv_voltage = BATTERY_VOLT_04_380000_V;
+				}
+				}	 else {
+				cv_voltage = BATTERY_VOLT_04_200000_V;
+			}
+			
+//qiangang@wind-mobi.com 20170424 end	
+			if((BMT_status.temperature > 45) && (BMT_status.temperature < 55) &&(BMT_status.bat_vol > 4100))
+				{
+					charging_enable = KAL_FALSE;
+				}
+				
+		#endif
+			}
+		//qiangang@wind-mobi.com 20161019 end
 
 	}
 
+//liqiang@wind-mobi.com 20170311 begin 
+#ifdef CONFIG_WIND_ASUS_BATTERY_LIFE_SUPPORT
+	if(BATLIFE_status.Normal2Batlife == 1 && BMT_status.UI_SOC >= 81)
+	{
+		charging_enable = KAL_FALSE;
+		BMT_status.total_charging_time = 0;
+		BMT_status.PRE_charging_time = 0;
+		BMT_status.CC_charging_time = 0;
+		BMT_status.TOPOFF_charging_time = 0;
+		BMT_status.POSTFULL_charging_time = 0;
+		BMT_status.bat_full_batlife = KAL_TRUE;
+	}
+#endif
+//liqiang@wind-mobi.com 20170311 end 	
 	/* enable/disable charging */
 	battery_charging_control(CHARGING_CMD_ENABLE, &charging_enable);
 
@@ -1014,7 +1073,14 @@ PMU_STATUS BAT_PreChargeModeAction(void)
 		BMT_status.bat_charging_state = CHR_BATFULL;
 		BMT_status.bat_full = KAL_TRUE;
 		g_charging_full_reset_bat_meter = KAL_TRUE;
-	} else if (BMT_status.bat_vol > V_PRE2CC_THRES) {
+	}
+	  //qiangang@wind-mobi.com 20170424 begin
+	  #if defined(BATTERY_DTS_SUPPORT) && defined(CONFIG_OF)
+	    else if (BMT_status.bat_vol > batt_cust_data.v_pre2cc_thres) {
+	  #else
+	    else if (BMT_status.bat_vol > V_PRE2CC_THRES) {
+	  #endif
+	  //qiangang@wind-mobi.com 20170424 end
 		BMT_status.bat_charging_state = CHR_CC;
 	}
 
@@ -1107,26 +1173,55 @@ PMU_STATUS BAT_BatteryFullAction(void)
 
 PMU_STATUS BAT_BatteryHoldAction(void)
 {
+    extern unsigned int g_charger_state;//added by qiangang@wind-mobi.com 20161018
 	unsigned int charging_enable;
 
 	battery_log(BAT_LOG_CRTI, "[BATTERY] Hold mode !!\n\r");
 
-	if (BMT_status.bat_vol < TALKING_RECHARGE_VOLTAGE || g_call_state == CALL_IDLE) {
+	//qiangang@wind-mobi.com 20170424 begin
+	#if defined(BATTERY_DTS_SUPPORT) && defined(CONFIG_OF)
+      if (BMT_status.bat_vol < batt_cust_data.talking_recharge_voltage || g_call_state == CALL_IDLE) {
+	#else 
+      if (BMT_status.bat_vol < TALKING_RECHARGE_VOLTAGE || g_call_state == CALL_IDLE) {
+	#endif
+	//qiangang@wind-mobi.com 20170424 end
 		BMT_status.bat_charging_state = CHR_CC;
 		battery_log(BAT_LOG_CRTI, "[BATTERY] Exit Hold mode and Enter CC mode !!\n\r");
 	}
 
 	/*  Disable charger */
 	charging_enable = KAL_FALSE;
+	//added by qiangang@wind-mobi.com  20161018 for AGING_POWER_TEST begin
+	if(g_charger_state == 0)
+		{
+			charging_enable = KAL_FALSE;
+			battery_log(BAT_LOG_CRTI,
+				    "wind_log_for AGING_POWER_TEST:g_charger_state = %d\n",g_charger_state);
+		}
+	//added by qiangang@wind-mobi.com  20161018 for AGING_POWER_TEST end
 	battery_charging_control(CHARGING_CMD_ENABLE, &charging_enable);
 
 	return PMU_STATUS_OK;
 }
 
-
+//qiangang@wind-mobi.com 20170104 begin
+#ifdef CONFIG_WIND_BATTERY_MODIFY 
+extern unsigned int g_batt_temp_status ;
+#endif
+extern unsigned int g_charger_demoapp_state; 
+extern int demoapp_flag;
+//qiangang@wind-mobi.com 20170104 end
 PMU_STATUS BAT_BatteryStatusFailAction(void)
 {
+	extern unsigned int g_charger_state ;//added by qiangang@wind-mobi.com 20170104 for AGING_POWER_TEST
+
+	//qiangang@wind-mobi.com 20170104 begin
+	#ifdef CONFIG_WIND_BATTERY_MODIFY
+	unsigned int charging_enable= KAL_FALSE;
+	#else
 	unsigned int charging_enable;
+	#endif
+    //qiangang@wind-mobi.com 20170104 begin
 
 	battery_log(BAT_LOG_CRTI, "[BATTERY] BAD Battery status... Charging Stop !!\n\r");
 
@@ -1148,7 +1243,37 @@ PMU_STATUS BAT_BatteryStatusFailAction(void)
 	BMT_status.POSTFULL_charging_time = 0;
 
 	/*  Disable charger */
+	//qiangang@wind-mobi.com 20170104 begin
+	#ifdef CONFIG_WIND_BATTERY_MODIFY
+	BMT_status.charger_vol=battery_meter_get_charger_voltage();
+	if((BMT_status.charger_vol < (batt_cust_data.v_charger_max-300))&&(BMT_status.charger_protect_status == charger_OVER_VOL)&&(g_batt_temp_status ==TEMP_POS_NORMAL))
+	{
+		BMT_status.bat_charging_state = CHR_CC;
+		charging_enable = KAL_TRUE;
+	}
+	else if((BMT_status.charger_vol > (batt_cust_data.v_charger_min+300))&&(BMT_status.charger_protect_status == charger_UNDER_VOL)&&(g_batt_temp_status ==TEMP_POS_NORMAL))
+	{
+		BMT_status.bat_charging_state = CHR_CC;
+		charging_enable = KAL_TRUE;
+	}
+	else 
+	{
 	charging_enable = KAL_FALSE;
+	
+	}
+	#else
+	charging_enable = KAL_FALSE;
+	#endif
+	//qiangang@wind-mobi.com 20170104 end
+	//added by qiangang@wind-mobi.com 20170104 for AGING_POWER_TEST begin
+	if((g_charger_state == 0) || (demoapp_flag ==1 && g_charger_demoapp_state == 1))
+		{
+			charging_enable = KAL_FALSE;
+			battery_log(BAT_LOG_CRTI,
+				    "wind_log_for AGING_POWER_TEST:g_charger_state = %d\n",g_charger_state);
+		}
+	//added by qiangang@wind-mobi.com 20170104 for AGING_POWER_TEST end	
+	
 	battery_charging_control(CHARGING_CMD_ENABLE, &charging_enable);
 
 	/* Disable PE+/PE+20 */
