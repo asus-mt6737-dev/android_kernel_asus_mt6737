@@ -88,7 +88,6 @@ extern int flashlight_set_pwm_old(u32 hduration, u32 lduration, u32 level);//heb
 
 //ranyanhao@wind-mobi.com 20160331 begin
 static struct proc_dir_entry *asus_proc_flash_file = NULL;
-static unsigned char asus_flash_brightness_flag = 0;
 int FL_Enable(void);
 int FL_Disable(void);
 int FL_dim_duty(kal_uint32 duty);
@@ -100,7 +99,6 @@ unsigned char asus_flash_lock = 0;
 static ssize_t asus_flash_brightness_read(struct file *file, char *buf,
 	size_t len, loff_t *pos)
 {
-	size_t ret = 0;
 	char *ptr =buf;
 
 	if (*pos)
@@ -120,7 +118,6 @@ static ssize_t asus_flash_brightness_write(struct file *file, const char *buff,
 	size_t len, loff_t *pos)
 {
 	char buf[5] = {0};
-	unsigned char i = 0;
 
 	if (len >= 5)
 	{
@@ -212,7 +209,7 @@ static int flashlight_probe(struct platform_device *dev)
 	
 	if(asus_proc_flash_file == NULL)
 	{
-		printk(" %s: proc asus_proc_flash file create failed!\n");
+		printk("proc asus_proc_flash file create failed!\n");
 	}
 //ranyanhao@wind-mobi.com 20160331 begin
 	
