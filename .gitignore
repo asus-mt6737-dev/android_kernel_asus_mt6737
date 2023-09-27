@@ -96,3 +96,8 @@ x509.genkey
 
 # Kconfig presets
 all.config
+
+gcc32/
+gcc64/
+anykernel3/
+log.txt
