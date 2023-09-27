@@ -978,9 +978,7 @@ int BattThermistorConverTemp(int Res)
 	return TBatt_Value;
 }
 // added by qiangang@wind-mobi.com 20170418 b--
-#ifdef CONFIG_WIND_ASUS_DEMAND_SUPPORT
 extern kal_bool upmu_is_chr_det(void);
-#endif
 // added by qiangang@wind-mobi.com 20170418 e--
 signed int fgauge_get_Q_max(signed short temperature)
 {
@@ -988,7 +986,6 @@ signed int fgauge_get_Q_max(signed short temperature)
 	signed int low_temperature = 0, high_temperature = 0;
 	signed int low_Q_max = 0, high_Q_max = 0;
 // added by qiangang@wind-mobi.com 20170418 b--
-	#ifdef CONFIG_WIND_ASUS_DEMAND_SUPPORT
 	struct device_node *np;
 	np = of_find_compatible_node(NULL, NULL, "mediatek,bat_meter");
 	if (!np) {
@@ -1023,7 +1020,6 @@ signed int fgauge_get_Q_max(signed short temperature)
 					&batt_meter_cust_data.q_max_neg_10);
 		}
  
-	#endif
 // added by qiangang@wind-mobi.com 20170418 e--
 	if (temperature <= batt_meter_cust_data.temperature_t1) {
 		low_temperature = (-10);
@@ -1070,7 +1066,6 @@ signed int fgauge_get_Q_max_high_current(signed short temperature)
 	signed int low_temperature = 0, high_temperature = 0;
 	signed int low_Q_max = 0, high_Q_max = 0;
 // added by qiangang@wind-mobi.com 20170418 b--
-#ifdef CONFIG_WIND_ASUS_DEMAND_SUPPORT
 	struct device_node *np;
 	np = of_find_compatible_node(NULL, NULL, "mediatek,bat_meter");
 	if (!np) {
@@ -1101,7 +1096,6 @@ signed int fgauge_get_Q_max_high_current(signed short temperature)
 		&batt_meter_cust_data.q_max_pos_0_h_current);
 		}
  
-	#endif
 // added by qiangang@wind-mobi.com 20170418 e--
 	if (temperature <= batt_meter_cust_data.temperature_t1) {
 		low_temperature = (-10);
@@ -2667,12 +2661,10 @@ signed int fgauge_update_dod(void)
 		temperature_change = 0;
 	}
 // added by qiangang@wind-mobi.com 20170418 b--
-	#ifdef CONFIG_WIND_ASUS_DEMAND_SUPPORT
 	if((upmu_is_chr_det() == KAL_TRUE))
 	{
 		gFG_BATT_CAPACITY = fgauge_get_Q_max(gFG_temp);
 	}
-	#endif
 // added by qiangang@wind-mobi.com 20170418 e--
 #endif
 #if 0

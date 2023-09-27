@@ -969,7 +969,6 @@ static void pchr_turn_on_charging(void)
 		} else {           //qiangang@wind-mobi.com 20170424 begin
 			/* Set CV Voltage */
 		mtk_select_cv();
-		#ifdef CONFIG_WIND_ASUS_DEMAND_SUPPORT
 			if((BMT_status.temperature > 0) && (BMT_status.temperature < 10))
 				{
 							#if (defined CONFIG_WIND_DEF_PRO_E281L) || (defined CONFIG_WIND_DEF_PRO_D281L)
@@ -979,7 +978,6 @@ static void pchr_turn_on_charging(void)
 							#endif
 							battery_log(BAT_LOG_CRTI,"0--10 set ac_charger_current = %d\n",g_temp_CC_value);
 				}
-	#endif
 
 			battery_charging_control(CHARGING_CMD_SET_INPUT_CURRENT,
 						 &g_temp_input_CC_value);

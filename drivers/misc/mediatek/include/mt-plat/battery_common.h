@@ -167,7 +167,7 @@ typedef enum {
  *  Normal battery temperature state
  ****************************************************************************/
 //qiangang@wind-mobi.com 20161019 begin
-#ifdef CONFIG_WIND_ASUS_DEMAND_SUPPORT
+#ifndef CONFIG_WIND_ASUS_DEMAND_SUPPORT
 typedef enum {
 	TEMP_POS_LOW = 0,
 	TEMP_POS_NORMAL,

@@ -87,7 +87,6 @@ static int lduration=-1;
 extern int flashlight_set_pwm_old(u32 hduration, u32 lduration, u32 level);//hebiao@wind-mobi.com 20160219 begin
 
 //ranyanhao@wind-mobi.com 20160331 begin
-#ifdef CONFIG_WIND_ASUS_DEMAND_SUPPORT
 static struct proc_dir_entry *asus_proc_flash_file = NULL;
 static unsigned char asus_flash_brightness_flag = 0;
 int FL_Enable(void);
@@ -161,7 +160,6 @@ static struct file_operations Asus_proc_asus_flash_brightness_ops =
 	.read  = asus_flash_brightness_read,
 	.write = asus_flash_brightness_write,
 };
-#endif
 //ranyanhao@wind-mobi.com 20160331 end
 
 static int flashlight_probe(struct platform_device *dev)
@@ -209,7 +207,6 @@ static int flashlight_probe(struct platform_device *dev)
 //hebiao@wind-mobi.com 20160530 end
 	
 //ranyanhao@wind-mobi.com 20160331 begin  
-#ifdef CONFIG_WIND_ASUS_DEMAND_SUPPORT 
 	asus_proc_flash_file = proc_create("driver/asus_flash_brightness", (S_IWUSR|S_IRUGO|S_IWUGO),
 		NULL, &Asus_proc_asus_flash_brightness_ops);
 	
@@ -217,7 +214,6 @@ static int flashlight_probe(struct platform_device *dev)
 	{
 		printk(" %s: proc asus_proc_flash file create failed!\n");
 	}
-#endif
 //ranyanhao@wind-mobi.com 20160331 begin
 	
 	printk("[flashlight]flashlight_probe done!\n");
@@ -241,9 +237,7 @@ printk("func==%s line=%d charger_red_output_high end\n", __func__, __LINE__);
 static int flashlight_remove(struct platform_device *dev)
 {
 //ranyanhao@wind-mobi.com 20160331 begin
-#ifdef CONFIG_WIND_ASUS_DEMAND_SUPPORT
     remove_proc_entry( "driver/asus_flash_brightness", NULL);
-#endif
 //ranyanhao@wind-mobi.com 20160331 end
 	return 0;
 }

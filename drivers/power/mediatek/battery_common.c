@@ -2545,7 +2545,7 @@ PMU_STATUS do_batt_temp_state_machine(void)
 	}
 
 //qiangang@wind-mobi.com 20161020 begin
-#ifdef CONFIG_WIND_ASUS_DEMAND_SUPPORT
+#ifndef CONFIG_WIND_ASUS_DEMAND_SUPPORT
 if (BMT_status.temperature >= batt_cust_data.max_charge_temperature) {
 		battery_log(BAT_LOG_CRTI, "[BATTERY] Battery Over Temperature !!\n\r");
 		g_batt_temp_status = TEMP_POS_HIGH;
