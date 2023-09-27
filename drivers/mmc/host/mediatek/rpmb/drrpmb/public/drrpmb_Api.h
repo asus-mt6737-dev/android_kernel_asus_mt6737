@@ -58,14 +58,6 @@ typedef struct {
  */
 #define RPMB_MULTI_BLOCK_ACCESS 1
 
-#if RPMB_MULTI_BLOCK_ACCESS
-#define MAX_RPMB_TRANSFER_BLK (16)
-#define MAX_RPMB_REQUEST_SIZE (512*MAX_RPMB_TRANSFER_BLK) /* 8KB(16blks) per requests. */
-#else
-#define MAX_RPMB_TRANSFER_BLK (1)
-#define MAX_RPMB_REQUEST_SIZE (512*MAX_RPMB_TRANSFER_BLK) /* 512B(1blks) per requests. */
-#endif
-
 typedef struct {
 	uint8_t frame[MAX_RPMB_REQUEST_SIZE];
 	uint32_t frameLen;
