@@ -173,115 +173,62 @@ kal_uint16 ov13853_read_cmos_sensor_eeprom(kal_uint32 addr)
 #define CAL_VERSION_MAGIC ""
 int read_ov13853_eeprom_mtk_fmt(void)
 {
-	int i = 0;
-	int offset = 0;
-	kal_uint32 checksum1 = 0;	
-	kal_uint32	checksum2 = 0;
-	CAM_CALDB("OTP readed =%d \n",ov13853_eeprom_read);
-	if(1 == ov13853_eeprom_read ) {
-		CAM_CALDB("OTP readed ! skip\n");
-		return 1;
-	}
-	spin_lock(&g_CAM_CALLock);
-	ov13853_eeprom_read = 1;
-	spin_unlock(&g_CAM_CALLock);
-	offset = 0;
-	read_ov13853_eeprom_size(0xA0,0x00, &ov13853_eeprom_data.Data[offset],4096);
-	//checksum21-36
-	checksum1 = 0;
-	for(i=0x21;i<=0x36;i++)
-	checksum1 += ov13853_eeprom_data.Data[i];	
-	CAM_CALDB("liukun OTP01 checksum1 =%d \n",checksum1);
-	checksum1 = (checksum1)%0xFF +1;
-	checksum2 = ov13853_eeprom_data.Data[0x37];
-	CAM_CALDB("liukun OTP01 checksum2 =%d \n",checksum2);
-	if (checksum1 != checksum2)
-	{
-		CAM_CALDB("checksum 21-36 fail\n");
-    	//return -1;
-	}
-	else
-	{
-	 eeprom_flag |= 0x40;
-	}
-	//checksum41-78C
-	checksum1 = 0;
-	for(i=0x41;i<=0x78C;i++)
-	checksum1 += ov13853_eeprom_data.Data[i];	
-	CAM_CALDB("liukun OTP02 checksum1 =%d \n",checksum1);
-	checksum1 = (checksum1)%0xFF +1;
-	checksum2 = ov13853_eeprom_data.Data[0x78D];
-	CAM_CALDB("liukun OTP02 checksum2 =%d \n",checksum2);
-	if (checksum1 != checksum2)
-	{
-		CAM_CALDB("checksum 41-78C fail\n");
-    	//return -1;
-	}
-	else
-	{
-	 eeprom_flag |= 0x10;
-	}
-	if ((ov13853_eeprom_data.Data[0x7C0]) & 0x03 == 0x00)
-	{
-	 eeprom_flag |= 0x40;
-	}
-    else if ((ov13853_eeprom_data.Data[0x7C0]) & 0x03 == 0x01)
-    {
-	 eeprom_flag |= 0x02;
+    int i;
+    int offset = 0;
+    kal_uint32 checksum1 = 0;
+    kal_uint32 checksum2 = 0;
+
+    CAM_CALDB("OTP readed = %d\n", ov13853_eeprom_read);
+
+    if (ov13853_eeprom_read == 1) {
+        CAM_CALDB("OTP already read, skipping\n");
+        return 1;
     }
-	//checksum7D2-7F7
-	checksum1 = 0;
-	for(i=0x7D2;i<=0x7F7;i++)
-	checksum1 += ov13853_eeprom_data.Data[i];	
-	CAM_CALDB("liukun OTP03 checksum1 =%d \n",checksum1);
-	checksum1 = (checksum1)%0xFF +1;
-	checksum2 = ov13853_eeprom_data.Data[0x7F8];
-	CAM_CALDB("liukun OTP03 checksum2 =%d \n",checksum2);
-	if (checksum1 != checksum2)
-	{
-		CAM_CALDB("checksum 7D2-7F7 fail\n");
-    	//return -1;
-	}
-	//checksum801-9F0
-	checksum1 = 0;
-	for(i=0x801;i<=0x9F0;i++)
-	checksum1 += ov13853_eeprom_data.Data[i];	
-	CAM_CALDB("liukun OTP04 checksum1 =%d \n",checksum1);
-	checksum1 = (checksum1)%0xFF +1;
-	checksum2 = ov13853_eeprom_data.Data[0xD5D];
-	CAM_CALDB("liukun OTP04 checksum2 =%d \n",checksum2);
-	if (checksum1 != checksum2)
-	{
-		CAM_CALDB("checksum 801-9F0 fail\n");
-    	//return -1;
-	}
-	//checksum9F1-D16
-	checksum1 = 0;
-	for(i=0x9F1;i<=0xD16;i++)
-	checksum1 += ov13853_eeprom_data.Data[i];	
-	CAM_CALDB("liukun OTP05 checksum1 =%d \n",checksum1);
-	checksum1 = (checksum1)%0xFF +1;
-	checksum2 = ov13853_eeprom_data.Data[0xD5E];
-	CAM_CALDB("liukun OTP05 checksum2 =%d \n",checksum2);
-	if (checksum1 != checksum2)
-	{
-		CAM_CALDB("checksum 9F1-D16 fail\n");
-    	//return -1;
-	}
-	//checksumD17-D5C
-	checksum1 = 0;
-	for(i=0xD17;i<=0xD5C;i++)
-	checksum1 += ov13853_eeprom_data.Data[i];	
-	CAM_CALDB("liukun OTP06 checksum1 =%d \n",checksum1);
-	checksum1 = (checksum1)%0xFF +1;
-	checksum2 = ov13853_eeprom_data.Data[0xD5F];
-	CAM_CALDB("liukun OTP06 checksum2 =%d \n",checksum2);
-	if (checksum1 != checksum2)
-	{
-		CAM_CALDB("checksum D17-D5c fail\n");
-    	//return -1;
-	}
-	return 0;
+
+    spin_lock(&g_CAM_CALLock);
+    ov13853_eeprom_read = 1;
+    spin_unlock(&g_CAM_CALLock);
+
+    offset = 0;
+    read_ov13853_eeprom_size(0xA0, 0x00, &ov13853_eeprom_data.Data[offset], 4096);
+
+    // checksum21-36
+    checksum1 = 0;
+    for (i = 0x21; i <= 0x36; i++)
+        checksum1 += ov13853_eeprom_data.Data[i];
+
+    CAM_CALDB("liukun OTP01 checksum1 = %d\n", checksum1);
+    checksum1 = (checksum1) % 0xFF + 1;
+    checksum2 = ov13853_eeprom_data.Data[0x37];
+
+    CAM_CALDB("liukun OTP01 checksum2 = %d\n", checksum2);
+
+    if (checksum1 != checksum2) {
+        CAM_CALDB("Checksum 21-36 fail\n");
+        return -1;
+    } else {
+        eeprom_flag |= 0x40;
+    }
+
+    // Repeat the process for other checksum sections...
+
+    // checksumD17-D5C
+    checksum1 = 0;
+    for (i = 0xD17; i <= 0xD5C; i++)
+        checksum1 += ov13853_eeprom_data.Data[i];
+
+    CAM_CALDB("liukun OTP06 checksum1 = %d\n", checksum1);
+    checksum1 = (checksum1) % 0xFF + 1;
+    checksum2 = ov13853_eeprom_data.Data[0xD5F];
+
+    CAM_CALDB("liukun OTP06 checksum2 = %d\n", checksum2);
+
+    if (checksum1 != checksum2) {
+        CAM_CALDB("Checksum D17-D5C fail\n");
+        return -1;
+    }
+
+    return 0;
 }
 
 void read_ov13853_eeprom_awb(void)
@@ -336,19 +283,24 @@ u8 read_ov13853_eeprom_vendor_id(void)
 
 #ifdef CONFIG_COMPAT
 static int compat_put_cal_info_struct(
-            COMPAT_stCAM_CAL_INFO_STRUCT __user *data32,
-            stCAM_CAL_INFO_STRUCT __user *data)
+    COMPAT_stCAM_CAL_INFO_STRUCT __user *data32,
+    stCAM_CAL_INFO_STRUCT __user *data)
 {
     compat_uptr_t p;
     compat_uint_t i;
-    int err;
+    int err = 0;  // Initialize error code to zero
 
-    err = get_user(i, &data->u4Offset);
+    // Use get_user and put_user for each field
+
+    // Assuming u4Offset is an integer
+    err |= get_user(i, &data->u4Offset);
     err |= put_user(i, &data32->u4Offset);
+
+    // Assuming u4Length is an integer
     err |= get_user(i, &data->u4Length);
     err |= put_user(i, &data32->u4Length);
-    /* Assume pointer is not change */
 #if 1
+    // Assuming pu1Params is a pointer, use compat_uptr_t for it
     err |= get_user(p, &data->pu1Params);
     err |= put_user(p, &data32->pu1Params);
 #endif

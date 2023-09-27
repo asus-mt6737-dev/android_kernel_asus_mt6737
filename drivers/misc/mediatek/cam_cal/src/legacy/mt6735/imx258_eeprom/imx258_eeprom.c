@@ -329,8 +329,8 @@ u8 read_imx258_eeprom_otp_vendor_id(void)
 
 #ifdef CONFIG_COMPAT
 static int compat_put_cal_info_struct(
-            COMPAT_stCAM_CAL_INFO_STRUCT __user *data32,
-            stCAM_CAL_INFO_STRUCT __user *data)
+    COMPAT_stCAM_CAL_INFO_STRUCT __user *data32,
+    stCAM_CAL_INFO_STRUCT __user *data)
 {
     compat_uptr_t p;
     compat_uint_t i;
@@ -340,7 +340,7 @@ static int compat_put_cal_info_struct(
     err |= put_user(i, &data32->u4Offset);
     err |= get_user(i, &data->u4Length);
     err |= put_user(i, &data32->u4Length);
-    /* Assume pointer is not change */
+
 #if 1
     err |= get_user(p, &data->pu1Params);
     err |= put_user(p, &data32->pu1Params);
