@@ -1149,7 +1149,7 @@ CONFIG_MTK_THERMAL_PA_VIA_ATCMD=y
 # MultiMedia, Display, Camera related configs
 #
 CONFIG_CUSTOM_KERNEL_IMGSENSOR="imx258_mipi_raw s5k3l8_mipi_raw s5k3l8_mipi_raw_new s5k3m2_mipi_raw hi551_mipi_raw ov13853_mipi_raw ov5670_mipi_raw hi553_mipi_raw s5k5e8yx_mipi_raw"
-CONFIG_CUSTOM_KERNEL_CAM_CAL_DRV="imx258_eeprom ov13853_eeprom s5k3l8_eeprom"
+CONFIG_CUSTOM_KERNEL_CAM_CAL_DRV="s5k3l8_eeprom"
 # CONFIG_MTK_SEC_VIDEO_PATH_SUPPORT is not set
 # CONFIG_MTK_DRM_KEY_MNG_SUPPORT is not set
 # CONFIG_MTK_LCM_PHYSICAL_ROTATION_HW is not set
