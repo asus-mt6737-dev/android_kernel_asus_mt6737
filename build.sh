@@ -17,7 +17,7 @@ KDIR=$(pwd)
 export KDIR
 
 # Default linker to use for builds.
-export LINKER="ld.lld"
+export LINKER="ld"
 
 # Device name.
 export DEVICE="Asus Zenfone 3 Max"
@@ -50,35 +50,21 @@ export COMPILER=gcc
 if [[ "${COMPILER}" = gcc ]]; then
     if [ ! -d "${KDIR}/gcc64" ]; then
         echo "Downloading arm64 gcc..."
-        curl -sL https://github.com/mvaisakh/gcc-arm64/archive/refs/heads/gcc-master.tar.gz | tar -xzf -
-        mv "${KDIR}"/gcc-arm64-gcc-master "${KDIR}"/gcc64
+        git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 --depth=1 -b android-7.1.2_r39
+        mv "${KDIR}"/aarch64-linux-android-4.9 "${KDIR}"/gcc64
     fi
 
-    if [ ! -d "${KDIR}/gcc32" ]; then
-        echo "Downloading arm gcc..."
-        curl -sL https://github.com/mvaisakh/gcc-arm/archive/refs/heads/gcc-master.tar.gz | tar -xzf -
-        mv "${KDIR}"/gcc-arm-gcc-master "${KDIR}"/gcc32
-    fi
-
-    KBUILD_COMPILER_STRING=$("${KDIR}"/gcc64/bin/aarch64-elf-gcc --version | head -n 1)
+    KBUILD_COMPILER_STRING=$("${KDIR}"/gcc64/bin/aarch64-linux-android-gcc --version | head -n 1)
     export KBUILD_COMPILER_STRING
-    export PATH="${KDIR}"/gcc32/bin:"${KDIR}"/gcc64/bin:/usr/bin/:${PATH}
+    export PATH="${KDIR}"/gcc64/bin:/usr/bin/:${PATH}
     MAKE+=(
         ARCH=arm64
         O=out
-        CROSS_COMPILE=aarch64-elf-
-        CROSS_COMPILE_ARM32=arm-eabi-
-        LD="${KDIR}"/gcc64/bin/aarch64-elf-"${LINKER}"
-        AR=llvm-ar
-        NM=llvm-nm
-        OBJDUMP=llvm-objdump
-        OBJCOPY=llvm-objcopy
-        OBJSIZE=llvm-objsize
-        STRIP=llvm-strip
-        HOSTAR=llvm-ar
+        CROSS_COMPILE=aarch64-linux-android-
+        LD="${KDIR}"/gcc64/bin/aarch64-linux-android-"${LINKER}"
         HOSTCC=gcc
-        HOSTCXX=aarch64-elf-g++
-        CC=aarch64-elf-gcc
+        HOSTCXX=aarch64-linux-android-g++
+        CC=aarch64-linux-android-gcc
     )
 
 elif [[ "${COMPILER}" = clang ]]; then
